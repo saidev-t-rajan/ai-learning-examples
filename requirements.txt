@@ -3,3 +3,4 @@ pytest-dotenv
 openai
 sentence-transformers
 torch
+chromadb
