@@ -1,15 +1,18 @@
 from app.core.chat_service import ChatService
 from app.db.memory import ChatRepository
 from app.core.models import ChatMetrics
+from app.rag.mock_service import MockRAGService
 
 
 def start_chat():
     print("--- Datacom AI Assessment ---")
     print("Type '/exit' to quit.")
+    print("Type '/ingest <path>' to load a document.")
 
     # Initialize our Service
     repo = ChatRepository()
-    chat_service = ChatService(repo=repo)
+    rag_service = MockRAGService()
+    chat_service = ChatService(repo=repo, rag_service=rag_service)
 
     while True:
         try:
@@ -20,6 +23,12 @@ def start_chat():
                 break
 
             if not user_input:
+                continue
+
+            if user_input.startswith("/ingest "):
+                path = user_input.split(" ", 1)[1].strip()
+                count = rag_service.ingest(path)
+                print(f"Ingested {count} chunks from {path}")
                 continue
 
             # Get response from the service (The Logic)

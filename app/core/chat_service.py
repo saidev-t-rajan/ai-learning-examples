@@ -1,16 +1,23 @@
 import time
-from typing import Generator, Union
+from typing import Generator, Union, Optional
 from openai import OpenAI
 from app.core.config import Settings
 from app.db.memory import ChatRepository
 from app.core.models import ChatMetrics
 from app.core.utils import calculate_cost
+from app.rag.protocol import RAGService
 
 
 class ChatService:
-    def __init__(self, repo: ChatRepository, settings: Settings = None):
+    def __init__(
+        self,
+        repo: ChatRepository,
+        settings: Settings = None,
+        rag_service: Optional[RAGService] = None,
+    ):
         self.settings = settings or Settings()
         self.repo = repo
+        self.rag_service = rag_service
         self.client = OpenAI(
             api_key=self.settings.OPENAI_API_KEY,
             base_url=self.settings.OPENAI_BASE_URL,
@@ -30,7 +37,16 @@ class ChatService:
         history = self.repo.get_recent_messages(limit=10)
 
         # 3. Prepare Messages
-        messages = [{"role": "system", "content": "You are a helpful assistant."}]
+        system_prompt = "You are a helpful assistant."
+
+        if self.rag_service:
+            context = self.rag_service.retrieve(message)
+            if context:
+                system_prompt += (
+                    f"\n\nUse the following context to answer the question:\n{context}"
+                )
+
+        messages = [{"role": "system", "content": system_prompt}]
         for msg in history:
             messages.append({"role": msg["role"], "content": msg["content"]})
 
