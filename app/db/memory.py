@@ -6,7 +6,7 @@ from contextlib import contextmanager
 
 
 class ChatRepository:
-    def __init__(self, db_path: str = "chat.db"):
+    def __init__(self, db_path: str = "data/chat.db"):
         self.db_path = db_path
         self._persistent_conn = None
 
