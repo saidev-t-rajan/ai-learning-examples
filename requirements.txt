@@ -1,5 +1,1 @@
-openai
-pytest
 pydantic-settings
-colorama
-python-dotenv
