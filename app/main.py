@@ -1,6 +1,12 @@
+from app.core.chat_service import ChatService
+
+
 def start_chat():
     print("--- Datacom AI Assessment ---")
     print("Type '/exit' to quit.")
+
+    # Initialize our Service
+    chat_service = ChatService()
 
     while True:
         try:
@@ -10,8 +16,14 @@ def start_chat():
                 print("Goodbye!")
                 break
 
-            # Placeholder for AI response
-            print(f"AI: Echoing '{user_input}'")
+            if not user_input:
+                continue
+
+            # Get response from the service (The Logic)
+            response = chat_service.get_response(user_input)
+
+            # Print response to the screen (The View)
+            print(f"AI: {response}")
 
         except (KeyboardInterrupt, EOFError):
             print("\nGoodbye!")
