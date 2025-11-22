@@ -4,7 +4,8 @@ from pydantic import Field
 
 class Settings(BaseSettings):
     OPENAI_API_KEY: str = Field(..., description="The API key for OpenAI")
-    MODEL_NAME: str = Field("gpt-4o", description="The model to use")
+    OPENAI_BASE_URL: str = Field(..., description="The Base URL for the OpenAI API")
+    MODEL_NAME: str = Field("Gpt4o", description="The model to use")
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

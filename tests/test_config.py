@@ -1,5 +1,6 @@
 import pytest
 import os
+from unittest.mock import patch
 from pydantic import ValidationError
 
 # TDD: We expect this import to fail initially
@@ -21,12 +22,14 @@ def test_settings_validation():
         pytest.fail("app.core.config module not found")
 
     # Clear the variable if it exists to test failure
-    if "OPENAI_API_KEY" in os.environ:
-        del os.environ["OPENAI_API_KEY"]
+    # We use patch.dict to ensure the deletion is temporary
+    with patch.dict(os.environ):
+        if "OPENAI_API_KEY" in os.environ:
+            del os.environ["OPENAI_API_KEY"]
 
-    # Assert that creating Settings without the key raises a validation error
-    with pytest.raises(ValidationError):
-        Settings()
+        # Assert that creating Settings without the key raises a validation error
+        with pytest.raises(ValidationError):
+            Settings(_env_file=None)
 
 
 def test_settings_loading():
@@ -36,12 +39,17 @@ def test_settings_loading():
     if Settings is None:
         pytest.fail("app.core.config module not found")
 
-    # Mock the environment variable
-    os.environ["OPENAI_API_KEY"] = "sk-test-key"
-    os.environ["MODEL_NAME"] = "gpt-4o-mini"
+    # Mock the environment variables safely using patch.dict
+    mock_env = {
+        "OPENAI_API_KEY": "sk-test-key",
+        "OPENAI_BASE_URL": "https://mock.api/v1",
+        "MODEL_NAME": "gpt-4o-mini",
+    }
 
-    # Reload settings or instantiate new one
-    config = Settings()
+    with patch.dict(os.environ, mock_env):
+        # Reload settings or instantiate new one
+        config = Settings()
 
-    assert config.OPENAI_API_KEY == "sk-test-key"
-    assert config.MODEL_NAME == "gpt-4o-mini"
+        assert config.OPENAI_API_KEY == "sk-test-key"
+        assert config.OPENAI_BASE_URL == "https://mock.api/v1"
+        assert config.MODEL_NAME == "gpt-4o-mini"

@@ -7,6 +7,7 @@ __pycache__/
 env/
 venv/
 .env
+.env.test
 .venv
 env.bak/
 venv.bak/
