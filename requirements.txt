@@ -1,3 +1,5 @@
 pydantic-settings
 pytest-dotenv
 openai
+sentence-transformers
+torch
