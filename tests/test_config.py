@@ -34,22 +34,16 @@ def test_settings_validation():
 
 def test_settings_loading():
     """
-    Test that Settings loads correctly when variables are present.
+    Test that Settings loads correctly from the real environment (.env.test).
     """
     if Settings is None:
         pytest.fail("app.core.config module not found")
 
-    # Mock the environment variables safely using patch.dict
-    mock_env = {
-        "OPENAI_API_KEY": "sk-test-key",
-        "OPENAI_BASE_URL": "https://mock.api/v1",
-        "MODEL_NAME": "gpt-4o-mini",
-    }
+    # The pytest-dotenv plugin (configured in pytest.ini) loads .env.test into os.environ
+    # So Settings() will naturally pick up those values.
+    config = Settings()
 
-    with patch.dict(os.environ, mock_env):
-        # Reload settings or instantiate new one
-        config = Settings()
-
-        assert config.OPENAI_API_KEY == "sk-test-key"
-        assert config.OPENAI_BASE_URL == "https://mock.api/v1"
-        assert config.MODEL_NAME == "gpt-4o-mini"
+    # Verify against the actual values in .env.test
+    assert config.MODEL_NAME == "Gpt4o"
+    assert config.OPENAI_API_KEY == os.environ["OPENAI_API_KEY"]
+    assert "aiunifier" in config.OPENAI_BASE_URL

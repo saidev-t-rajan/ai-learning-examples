@@ -28,7 +28,8 @@ def test_conversation_memory_real(settings, repo):
 
     # 1. Send a message
     # We use a very short prompt to save tokens/time
-    service.get_response("Hi")
+    # Consume generator
+    list(service.get_response("Hi"))
 
     # 2. Check DB directly to verify persistence
     history = repo.get_recent_messages(limit=10)
@@ -42,7 +43,7 @@ def test_conversation_memory_real(settings, repo):
     # 3. Send another message to verify context
     # We can't easily prove the model "remembered" without a complex prompt,
     # but we can verify the DB grew.
-    service.get_response("Bye")
+    list(service.get_response("Bye"))
 
     history_new = repo.get_recent_messages(limit=10)
     # Expect: User("Hi") + Assistant(Response1) + User("Bye") + Assistant(Response2)
@@ -63,7 +64,17 @@ def test_get_response_real_api(settings, repo):
     service = ChatService(repo=repo, settings=settings)
 
     # We use a simple prompt to verify connectivity
-    response = service.get_response("Hello, simply say 'Hello World'")
+    # Consume generator
+    chunks = list(service.get_response("Hello, simply say 'Hello World'"))
+
+    # Last chunk should be metrics
+    metrics = chunks[-1]
+    from app.core.models import ChatMetrics
+
+    assert isinstance(metrics, ChatMetrics)
+
+    # Reconstruct text
+    response = "".join([c for c in chunks if isinstance(c, str)])
 
     assert isinstance(response, str)
     assert len(response) > 0
@@ -81,12 +92,13 @@ def test_memory_recall_real_llm(settings, repo):
 
     # Session 1: Teach the AI
     service1 = ChatService(repo=repo, settings=settings)
-    service1.get_response("My name is Alice. Please remember this.")
+    list(service1.get_response("My name is Alice. Please remember this."))
 
     # Session 2: Verify Memory
     # We instantiate a NEW service, but pass the EXISTING repo (simulating persistent DB)
     service2 = ChatService(repo=repo, settings=settings)
-    response = service2.get_response("What is my name?")
+    chunks = list(service2.get_response("What is my name?"))
+    response = "".join([c for c in chunks if isinstance(c, str)])
 
     # Assert the AI mentions "Alice"
     assert "Alice" in response
