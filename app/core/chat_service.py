@@ -3,8 +3,8 @@ from app.core.config import Settings
 
 
 class ChatService:
-    def __init__(self):
-        self.settings = Settings()
+    def __init__(self, settings: Settings = None):
+        self.settings = settings or Settings()
         self.client = OpenAI(
             api_key=self.settings.OPENAI_API_KEY,
             base_url=self.settings.OPENAI_BASE_URL,

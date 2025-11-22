@@ -7,19 +7,19 @@ except ImportError:
     ChatService = None
 
 
-def test_chat_service_structure():
+def test_chat_service_structure(settings):
     """
     Test that the ChatService class exists and has a get_response method.
     """
     if ChatService is None:
         pytest.fail("app.core.chat_service module not found")
 
-    service = ChatService()
+    service = ChatService(settings=settings)
     assert hasattr(service, "get_response")
 
 
 @pytest.mark.integration
-def test_get_response_real_api():
+def test_get_response_real_api(settings):
     """
     Test that get_response calls the REAL OpenAI API and returns valid content.
     This test makes a real network request.
@@ -27,7 +27,7 @@ def test_get_response_real_api():
     if ChatService is None:
         pytest.fail("ChatService not found")
 
-    service = ChatService()
+    service = ChatService(settings=settings)
 
     # We use a simple prompt to verify connectivity
     response = service.get_response("Hello, simply say 'Hello World'")
