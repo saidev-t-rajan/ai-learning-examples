@@ -1,4 +1,5 @@
 from app.core.chat_service import ChatService
+from app.db.memory import ChatRepository
 
 
 def start_chat():
@@ -6,7 +7,8 @@ def start_chat():
     print("Type '/exit' to quit.")
 
     # Initialize our Service
-    chat_service = ChatService()
+    repo = ChatRepository()
+    chat_service = ChatService(repo=repo)
 
     while True:
         try:
