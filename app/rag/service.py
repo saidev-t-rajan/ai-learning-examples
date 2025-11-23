@@ -1,16 +1,16 @@
 from app.rag.loader import PDFLoader
 from app.rag.splitter import RecursiveCharacterTextSplitter
-from app.rag.embeddings import OpenAIEmbeddings
+from app.rag.embeddings import LocalEmbeddings
 from app.db.vector import ChromaVectorStore
 
 
 class RAGService:
-    def __init__(self):
+    def __init__(self, vector_store=None):
         self.loader = PDFLoader()
         self.splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
-        self.embeddings = OpenAIEmbeddings()
+        self.embeddings = LocalEmbeddings()
         # Initialize vector store (which handles persistence)
-        self.vector_store = ChromaVectorStore()
+        self.vector_store = vector_store if vector_store else ChromaVectorStore()
 
     def ingest(self, path: str) -> int:
         """

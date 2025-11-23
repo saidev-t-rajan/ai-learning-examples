@@ -1,5 +1,6 @@
 import pytest
 from app.rag.service import RAGService
+from app.db.vector import ChromaVectorStore
 
 
 @pytest.mark.integration
@@ -13,7 +14,13 @@ def test_rag_ingest_and_retrieve_integration(tmp_path):
     content = "The secret code is BLUE-HORIZON-99."
     p.write_text(content)
 
-    service = RAGService()
+    # Create an isolated vector store using tmp_path
+    isolated_store = ChromaVectorStore(
+        collection_name="test_rag_integration",
+        persist_directory=str(tmp_path / "chroma_db"),
+    )
+
+    service = RAGService(vector_store=isolated_store)
 
     # Ingest
     # Expecting it to return number of chunks or documents

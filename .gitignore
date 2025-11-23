@@ -30,6 +30,7 @@ build/
 # Database
 *.db
 *.sqlite3
-data/chroma_db/
+data/
 
 *.md
+

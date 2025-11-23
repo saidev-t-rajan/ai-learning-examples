@@ -58,7 +58,8 @@ class ChromaVectorStore:
         if not embedding_service:
             raise ValueError("Embedding service is required for search.")
 
-        collection = self.client.get_collection(name=self.collection_name)
+        # Use get_or_create_collection to avoid crashing if the collection doesn't exist yet
+        collection = self.client.get_or_create_collection(name=self.collection_name)
 
         query_vector = embedding_service.embed_query(query)
 

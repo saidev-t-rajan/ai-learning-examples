@@ -1,23 +1,17 @@
 import pytest
-from app.core.config import Settings
 
 # These imports will fail initially, which is expected
 try:
-    from app.rag.embeddings import OpenAIEmbeddings
+    from app.rag.embeddings import LocalEmbeddings
     from app.db.vector import ChromaVectorStore
 except ImportError:
     pass
 
 
 @pytest.mark.integration
-def test_openai_embeddings_and_chroma_integration():
-    settings = Settings()
-    if not settings.OPENAI_API_KEY:
-        pytest.skip("OPENAI_API_KEY not set")
-
-    # 1. Initialize Embeddings (Real API)
-    # The class should accept the client or settings, or default to env
-    embeddings = OpenAIEmbeddings()
+def test_local_embeddings_and_chroma_integration():
+    # 1. Initialize Embeddings (Local)
+    embeddings = LocalEmbeddings()
 
     # 2. Initialize Vector Store (Real Chroma)
     # We use a temporary collection for testing to avoid polluting data
