@@ -1,7 +1,7 @@
 from app.core.chat_service import ChatService
 from app.db.memory import ChatRepository
 from app.core.models import ChatMetrics
-from app.rag.mock_service import MockRAGService
+from app.rag.service import RAGService
 
 
 def start_chat():
@@ -11,7 +11,7 @@ def start_chat():
 
     # Initialize our Service
     repo = ChatRepository()
-    rag_service = MockRAGService()
+    rag_service = RAGService()
     chat_service = ChatService(repo=repo, rag_service=rag_service)
 
     while True:
