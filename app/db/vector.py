@@ -51,9 +51,10 @@ class ChromaVectorStore:
 
     def similarity_search(
         self, query: str, k: int = 5, embedding_service: EmbeddingService = None
-    ) -> List[str]:
+    ) -> List[tuple[str, dict]]:
         """
-        Return top k documents similar to query.
+        Return top k documents similar to query with their metadata.
+        Returns: List[(text, metadata)]
         """
         if not embedding_service:
             raise ValueError("Embedding service is required for search.")
@@ -69,6 +70,19 @@ class ChromaVectorStore:
         )
 
         # results['documents'] is List[List[str]]
-        if results["documents"]:
-            return results["documents"][0]
-        return []
+        # results['metadatas'] is List[List[dict]]
+        found_docs = []
+        if results["documents"] and results["metadatas"]:
+            docs = results["documents"][0]
+            metas = results["metadatas"][0]
+            # Handle case where metas might be None if not stored (though add_documents usually ensures it)
+            # Chroma might return None in the list if no metadata?
+            # Safest is to zip.
+            for doc, meta in zip(docs, metas):
+                found_docs.append((doc, meta if meta else {}))
+        elif results["documents"]:
+            # Fallback if no metadata found
+            for doc in results["documents"][0]:
+                found_docs.append((doc, {}))
+
+        return found_docs

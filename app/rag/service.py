@@ -46,5 +46,15 @@ class RAGService:
             query=query, k=3, embedding_service=self.embeddings
         )
 
+        formatted_results = []
+        for i, item in enumerate(results, 1):
+            # Handle both string (legacy) and tuple (new) formats
+            if isinstance(item, tuple):
+                text, metadata = item
+                source = metadata.get("source", "Unknown") if metadata else "Unknown"
+                formatted_results.append(f"[{i}] (Source: {source})\n{text}")
+            else:
+                formatted_results.append(item)
+
         # Join results with some separation
-        return "\n\n".join(results)
+        return "\n\n".join(formatted_results)

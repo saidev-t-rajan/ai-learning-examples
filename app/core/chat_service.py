@@ -43,7 +43,9 @@ class ChatService:
             context = self.rag_service.retrieve(message)
             if context:
                 system_prompt += (
-                    f"\n\nUse the following context to answer the question:\n{context}"
+                    f"\n\nUse the following context to answer the question.\n"
+                    f"Answer using ONLY the following context. Cite sources using the format [1], [2], etc.\n\n"
+                    f"{context}"
                 )
 
         messages = [{"role": "system", "content": system_prompt}]
