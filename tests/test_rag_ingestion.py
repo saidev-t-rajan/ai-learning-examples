@@ -1,17 +1,17 @@
 import pytest
-from app.rag.loader import PDFLoader
+from app.rag.loader import DocumentLoader
 from app.rag.splitter import RecursiveCharacterTextSplitter
 
-# --- Test PDFLoader ---
+# --- Test DocumentLoader ---
 
 
-def test_pdf_loader_file_not_found():
-    loader = PDFLoader()
+def test_document_loader_file_not_found():
+    loader = DocumentLoader()
     with pytest.raises(FileNotFoundError):
         loader.load("non_existent_file.pdf")
 
 
-def test_pdf_loader_extracts_text(tmp_path):
+def test_document_loader_extracts_pdf_text(tmp_path):
     # Create a real PDF file
     pdf_path = tmp_path / "test.pdf"
 
@@ -30,11 +30,22 @@ def test_pdf_loader_extracts_text(tmp_path):
 
     pdf_path.write_bytes(minimal_pdf_content)
 
-    loader = PDFLoader()
+    loader = DocumentLoader()
     text = loader.load(str(pdf_path))
 
     # pypdf should extract "Hello World"
     assert "Hello World" in text
+
+
+def test_document_loader_extracts_txt_text(tmp_path):
+    # Create a real TXT file
+    txt_path = tmp_path / "test.txt"
+    txt_path.write_text("This is a simple text file.", encoding="utf-8")
+
+    loader = DocumentLoader()
+    text = loader.load(str(txt_path))
+
+    assert "This is a simple text file." in text
 
 
 # --- Test RecursiveCharacterTextSplitter ---

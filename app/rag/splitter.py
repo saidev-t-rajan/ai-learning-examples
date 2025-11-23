@@ -4,8 +4,8 @@ from typing import List
 class RecursiveCharacterTextSplitter:
     def __init__(
         self,
-        chunk_size: int = 500,
-        chunk_overlap: int = 50,
+        chunk_size: int = 1000,
+        chunk_overlap: int = 200,
         separators: List[str] = None,
     ):
         self.chunk_size = chunk_size

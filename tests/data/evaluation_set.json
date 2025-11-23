@@ -1,0 +1,102 @@
+[
+    {
+        "question": "What is the name of the ship in Moby Dick?",
+        "expected_keywords": ["Pequod"],
+        "source": "moby_dick.txt"
+    },
+    {
+        "question": "Who created the monster in Frankenstein?",
+        "expected_keywords": ["Victor", "Frankenstein"],
+        "source": "frankenstein.txt"
+    },
+    {
+        "question": "Who is the assistant of Sherlock Holmes?",
+        "expected_keywords": ["Watson", "John"],
+        "source": "sherlock_holmes.txt"
+    },
+    {
+        "question": "Who does Elizabeth Bennet marry?",
+        "expected_keywords": ["Darcy", "Fitzwilliam"],
+        "source": "pride_and_prejudice.txt"
+    },
+    {
+        "question": "Who is the vampire hunter in Dracula?",
+        "expected_keywords": ["Van Helsing"],
+        "source": "dracula.txt"
+    },
+    {
+        "question": "Where does Sherlock Holmes live?",
+        "expected_keywords": ["Baker Street"],
+        "source": "sherlock_holmes.txt"
+    },
+    {
+        "question": "What is the name of the island where the treasure is hidden in The Count of Monte Cristo?",
+        "expected_keywords": ["Monte Cristo"],
+        "source": "count_of_monte_cristo.txt"
+    },
+    {
+        "question": "What color is the whale Moby Dick?",
+        "expected_keywords": ["White"],
+        "source": "moby_dick.txt"
+    },
+    {
+        "question": "Who is the primary narrator of Moby Dick?",
+        "expected_keywords": ["Ishmael"],
+        "source": "moby_dick.txt"
+    },
+    {
+        "question": "What weapon does Van Helsing use against vampires?",
+        "expected_keywords": ["Stake", "Garlic", "Crucifix"],
+        "source": "dracula.txt"
+    },
+    {
+        "question": "Who is the illegitimate son of Count Bezukhov in War and Peace?",
+        "expected_keywords": ["Pierre", "Bezukhov"],
+        "source": "war_and_peace.txt"
+    },
+    {
+        "question": "Who is the main female protagonist in War and Peace?",
+        "expected_keywords": ["Natasha", "Rostova"],
+        "source": "war_and_peace.txt"
+    },
+    {
+        "question": "Who is the main character in Ulysses?",
+        "expected_keywords": ["Leopold", "Bloom"],
+        "source": "ulysses.txt"
+    },
+    {
+        "question": "In which city does Ulysses take place?",
+        "expected_keywords": ["Dublin"],
+        "source": "ulysses.txt"
+    },
+    {
+        "question": "Who is the ring bearer in the Fellowship of the Ring?",
+        "expected_keywords": ["Frodo", "Baggins"],
+        "source": "lotr_fellowship.pdf"
+    },
+    {
+        "question": "Who is the wizard in the Fellowship of the Ring?",
+        "expected_keywords": ["Gandalf", "Mithrandir"],
+        "source": "lotr_fellowship.pdf"
+    },
+    {
+        "question": "Who is accused of murdering William Frankenstein?",
+        "expected_keywords": ["Justine", "Moritz"],
+        "source": "frankenstein.txt"
+    },
+    {
+        "question": "Who is the eldest Bennet sister?",
+        "expected_keywords": ["Jane"],
+        "source": "pride_and_prejudice.txt"
+    },
+    {
+        "question": "Who betrayed Edmond Dantes?",
+        "expected_keywords": ["Danglars", "Fernand", "Mondego", "Villefort"],
+        "source": "count_of_monte_cristo.txt"
+    },
+    {
+        "question": "Who is the landlady of 221B Baker Street?",
+        "expected_keywords": ["Mrs. Hudson", "Hudson"],
+        "source": "sherlock_holmes.txt"
+    }
+]

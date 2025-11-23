@@ -1,4 +1,5 @@
 import uuid
+import os
 from typing import List, Protocol, Optional
 import chromadb
 
@@ -13,8 +14,15 @@ class ChromaVectorStore:
     def __init__(
         self,
         collection_name: str = "documents",
-        persist_directory: str = "data/chroma_db",
+        persist_directory: str = None,
     ):
+        if persist_directory is None:
+            # Default to <project_root>/data/chroma_db
+            # This file is in app/db/vector.py -> ../../data/chroma_db
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            project_root = os.path.dirname(os.path.dirname(current_dir))
+            persist_directory = os.path.join(project_root, "data", "chroma_db")
+
         self.client = chromadb.PersistentClient(path=persist_directory)
         self.collection_name = collection_name
 
@@ -42,12 +50,25 @@ class ChromaVectorStore:
         # Chroma requires 'ids' list.
         ids = [str(uuid.uuid4()) for _ in texts]
 
-        collection.add(
-            documents=texts,
-            embeddings=embeddings,
-            metadatas=metadatas,
-            ids=ids,
-        )
+        # Chroma/SQLite has a limit on the number of parameters in a query.
+        # We process in batches to avoid "Batch size is greater than max batch size" errors.
+        batch_size = 5000
+        total_docs = len(texts)
+
+        for i in range(0, total_docs, batch_size):
+            end_idx = min(i + batch_size, total_docs)
+
+            batch_texts = texts[i:end_idx]
+            batch_embeddings = embeddings[i:end_idx]
+            batch_ids = ids[i:end_idx]
+            batch_metadatas = metadatas[i:end_idx] if metadatas else None
+
+            collection.add(
+                documents=batch_texts,
+                embeddings=batch_embeddings,
+                metadatas=batch_metadatas,
+                ids=batch_ids,
+            )
 
     def similarity_search(
         self, query: str, k: int = 5, embedding_service: EmbeddingService = None

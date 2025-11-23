@@ -30,7 +30,7 @@ build/
 # Database
 *.db
 *.sqlite3
-data/
+/data/
 
 *.md
 
