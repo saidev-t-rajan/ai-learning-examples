@@ -2,6 +2,7 @@ from app.rag.loader import PDFLoader
 from app.rag.splitter import RecursiveCharacterTextSplitter
 from app.rag.embeddings import LocalEmbeddings
 from app.db.vector import ChromaVectorStore
+from app.core.utils import time_execution
 
 
 class RAGService:
@@ -36,6 +37,7 @@ class RAGService:
 
         return len(chunks)
 
+    @time_execution(threshold=0.3)
     def retrieve(self, query: str) -> str:
         """
         Retrieves context relevant to the query.

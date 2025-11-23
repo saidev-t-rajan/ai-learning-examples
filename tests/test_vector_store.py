@@ -31,7 +31,11 @@ def test_local_embeddings_and_chroma_integration():
 
     # 5. Assert
     assert len(results) == 1
-    assert results[0] == "Apple is a fruit"
+    # Check that we get a tuple (text, metadata)
+    assert isinstance(results[0], tuple)
+    assert results[0][0] == "Apple is a fruit"
+    # Optional: verify metadata too
+    assert results[0][1] == {"category": "food"}
 
     # Cleanup (optional, but good for local usage)
     try:

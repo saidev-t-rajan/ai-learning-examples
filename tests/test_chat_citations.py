@@ -1,41 +1,45 @@
-from unittest.mock import MagicMock
+import pytest
 from app.core.chat_service import ChatService
 from app.db.memory import ChatRepository
-from app.rag.protocol import RAGService
+from app.rag.service import RAGService
+from app.db.vector import ChromaVectorStore
+from app.rag.embeddings import LocalEmbeddings
 
 
-class MockRAGService(RAGService):
-    def ingest(self, path: str) -> int:
-        return 0
+@pytest.mark.integration
+def test_system_prompt_contains_citation_instructions_and_model_complies(
+    tmp_path, settings
+):
+    # Setup Real Components
+    embeddings = LocalEmbeddings()
+    store = ChromaVectorStore(
+        collection_name="test_citations_real",
+        persist_directory=str(tmp_path / "chroma_db"),
+    )
 
-    def retrieve(self, query: str) -> str:
-        # Simulate a formatted citation response
-        return "[1] (Source: doc.pdf)\nThe sky is blue."
+    # Ingest knowledge
+    # We add a specific fact that the model is unlikely to guess exactly this way without context,
+    # or just a standard fact but we want to see the citation.
+    texts = ["The secret code for the vault is 1234-XYZ."]
+    metadatas = [{"source": "secret_manual.pdf"}]
+    store.add_documents(texts, metadatas, embedding_service=embeddings)
 
-
-def test_system_prompt_contains_citation_instructions():
-    # Setup
+    rag_service = RAGService(vector_store=store)
     repo = ChatRepository(db_path=":memory:")
-    rag_service = MockRAGService()
-    chat_service = ChatService(repo=repo, rag_service=rag_service)
 
-    # We intercept the OpenAI client call to check the messages sent
-    chat_service.client = MagicMock()
+    chat_service = ChatService(repo=repo, rag_service=rag_service, settings=settings)
 
     # Act
-    # We trigger the generator but don't iterate fully since we just want to check the call
-    gen = chat_service.get_response("Why is the sky blue?")
-    next(gen, None)  # Trigger execution
+    # Ask for the secret code. The RAG should retrieve it.
+    gen = chat_service.get_response("What is the secret code?")
+
+    # Collect response
+    response = "".join([chunk for chunk in gen if isinstance(chunk, str)])
 
     # Assert
-    call_args = chat_service.client.chat.completions.create.call_args
-    assert call_args is not None
-
-    kwargs = call_args.kwargs
-    messages = kwargs["messages"]
-    system_message = next(m for m in messages if m["role"] == "system")
-
-    # The prompt must instruct the model about citations
-    assert "Cite sources using the format [1], [2]" in system_message["content"]
-    # And it should include our retrieved context
-    assert "[1] (Source: doc.pdf)" in system_message["content"]
+    # We verify the model found the info and cited it.
+    assert "1234-XYZ" in response
+    # The citation format in RAGService is "[1] (Source: ...)"
+    # The system prompt instructs to use [1].
+    # So we expect "[1]" in the output.
+    assert "[1]" in response

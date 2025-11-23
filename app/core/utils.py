@@ -1,3 +1,38 @@
+import time
+import logging
+import functools
+
+logger = logging.getLogger(__name__)
+
+
+def time_execution(threshold: float = 0.3):
+    """
+    Decorator to measure execution time of a function.
+    Logs a warning if execution time exceeds the threshold (seconds).
+    """
+
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            start_time = time.time()
+            result = func(*args, **kwargs)
+            end_time = time.time()
+            duration = end_time - start_time
+
+            if duration > threshold:
+                logger.warning(
+                    f"Execution of '{func.__name__}' took {duration:.2f}s (>{threshold:.2f}s)"
+                )
+            else:
+                logger.debug(f"Execution of '{func.__name__}' took {duration:.2f}s")
+
+            return result
+
+        return wrapper
+
+    return decorator
+
+
 def calculate_cost(model_name: str, input_tokens: int, output_tokens: int) -> float:
     """
     Calculate the cost of a request based on the model and token usage.

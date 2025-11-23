@@ -1,22 +1,26 @@
 import logging
 import time
-from unittest.mock import MagicMock
 from app.rag.service import RAGService
 from app.db.vector import ChromaVectorStore
 
 
-def test_retrieve_logs_warning_if_slow(caplog):
-    # Setup
-    mock_store = MagicMock(spec=ChromaVectorStore)
-
-    # Mock similarity_search to sleep > 0.3s
-    def slow_search(*args, **kwargs):
-        time.sleep(0.31)
+class SlowVectorStore(ChromaVectorStore):
+    def similarity_search(self, query, k=4, embedding_service=None):
+        time.sleep(0.31)  # Force latency
         return []
 
-    mock_store.similarity_search.side_effect = slow_search
 
-    service = RAGService(vector_store=mock_store)
+def test_retrieve_logs_warning_if_slow(caplog, tmp_path):
+    # Setup
+    # We pass a dummy persist directory
+    store = SlowVectorStore(
+        collection_name="test_slow", persist_directory=str(tmp_path / "chroma_db")
+    )
+
+    # We don't even need real embeddings since we override similarity_search
+    # but RAGService expects it to work.
+
+    service = RAGService(vector_store=store)
 
     # Act
     with caplog.at_level(logging.WARNING):

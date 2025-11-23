@@ -1,6 +1,5 @@
 import pytest
 import os
-from unittest.mock import patch
 from pydantic import ValidationError
 
 # TDD: We expect this import to fail initially
@@ -21,15 +20,21 @@ def test_settings_validation():
     if Settings is None:
         pytest.fail("app.core.config module not found")
 
-    # Clear the variable if it exists to test failure
-    # We use patch.dict to ensure the deletion is temporary
-    with patch.dict(os.environ):
+    # Manual environment management instead of patch.dict
+    original_key = os.environ.get("OPENAI_API_KEY")
+
+    try:
         if "OPENAI_API_KEY" in os.environ:
             del os.environ["OPENAI_API_KEY"]
 
         # Assert that creating Settings without the key raises a validation error
         with pytest.raises(ValidationError):
             Settings(_env_file=None)
+
+    finally:
+        # Restore environment
+        if original_key is not None:
+            os.environ["OPENAI_API_KEY"] = original_key
 
 
 def test_settings_loading():

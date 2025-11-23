@@ -1,8 +1,6 @@
 import pytest
-from unittest.mock import MagicMock, patch
 from app.rag.loader import PDFLoader
 from app.rag.splitter import RecursiveCharacterTextSplitter
-import os
 
 # --- Test PDFLoader ---
 
@@ -13,30 +11,30 @@ def test_pdf_loader_file_not_found():
         loader.load("non_existent_file.pdf")
 
 
-@patch("app.rag.loader.pypdf.PdfReader")
-def test_pdf_loader_extracts_text(mock_pdf_reader):
-    # Setup mock
-    mock_page1 = MagicMock()
-    mock_page1.extract_text.return_value = "Page 1 content."
+def test_pdf_loader_extracts_text(tmp_path):
+    # Create a real PDF file
+    pdf_path = tmp_path / "test.pdf"
 
-    mock_page2 = MagicMock()
-    mock_page2.extract_text.return_value = "Page 2 content."
+    # Minimal PDF with "Hello World"
+    # This is binary data.
+    minimal_pdf_content = (
+        b"%PDF-1.1\n"
+        b"1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n"
+        b"2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n"
+        b"3 0 obj\n<< /Type /Page /Parent 2 0 R /Resources << /Font << /F1 4 0 R >> >> /MediaBox [0 0 612 792] /Contents 5 0 R >>\nendobj\n"
+        b"4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n"
+        b"5 0 obj\n<< /Length 44 >>\nstream\nBT /F1 24 Tf 100 700 Td (Hello World) Tj ET\nendstream\nendobj\n"
+        b"xref\n0 6\n0000000000 65535 f \n0000000010 00000 n \n0000000060 00000 n \n0000000117 00000 n \n0000000230 00000 n \n0000000318 00000 n \n"
+        b"trailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n412\n%%EOF\n"
+    )
 
-    instance = mock_pdf_reader.return_value
-    instance.pages = [mock_page1, mock_page2]
+    pdf_path.write_bytes(minimal_pdf_content)
 
-    # Create a dummy file to pass existence check
-    dummy_path = "dummy.pdf"
-    with open(dummy_path, "w") as f:
-        f.write("dummy")
+    loader = PDFLoader()
+    text = loader.load(str(pdf_path))
 
-    try:
-        loader = PDFLoader()
-        text = loader.load(dummy_path)
-        assert text == "Page 1 content.\nPage 2 content."
-    finally:
-        if os.path.exists(dummy_path):
-            os.remove(dummy_path)
+    # pypdf should extract "Hello World"
+    assert "Hello World" in text
 
 
 # --- Test RecursiveCharacterTextSplitter ---

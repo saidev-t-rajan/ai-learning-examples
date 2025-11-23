@@ -1,43 +1,58 @@
 import pytest
-from unittest.mock import patch
-from io import StringIO
+import sys
+import subprocess
+from pathlib import Path
 
-# TDD: Import will fail initially
-try:
-    from app import main
-except ImportError:
-    main = None
+# Get the root directory of the project (where app/ is)
+PROJECT_ROOT = Path(__file__).parent.parent
 
 
 @pytest.mark.integration
-def test_cli_exit_command():
+def test_cli_exit_command_real():
     """
     Test that the CLI loop exits cleanly when the user types '/exit'.
+    Runs the actual process.
     """
-    user_inputs = ["/exit"]
+    # Run the module as a script
+    result = subprocess.run(
+        [sys.executable, "-m", "app.main"],
+        input="/exit\n",
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+        timeout=20,  # Safety timeout - increased for imports
+    )
 
-    with patch("builtins.input", side_effect=user_inputs):
-        with patch("sys.stdout", new=StringIO()) as fake_out:
-            main.start_chat()
-            output = fake_out.getvalue()
-            assert "Datacom AI Assessment" in output
-            assert "Goodbye" in output
+    assert result.returncode == 0
+    assert "Datacom AI Assessment" in result.stdout
+    assert "Goodbye" in result.stdout
 
 
 @pytest.mark.integration
-def test_cli_uses_service():
+def test_cli_uses_service_real():
     """
     Test that the CLI actually calls the REAL ChatService.
+    Runs the actual process.
     """
-    user_inputs = ["Hello AI", "/exit"]
+    # We send "Hello" then "/exit"
+    # Note: This will hit the real OpenAI API and cost money/tokens.
+    input_str = "Hello AI\n/exit\n"
 
-    with patch("builtins.input", side_effect=user_inputs):
-        with patch("sys.stdout", new=StringIO()) as fake_out:
-            main.start_chat()
+    result = subprocess.run(
+        [sys.executable, "-m", "app.main"],
+        input=input_str,
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+        timeout=30,  # Longer timeout for API call
+    )
 
-            output = fake_out.getvalue()
+    assert result.returncode == 0
+    # Check for CLI prompt/prefixes
+    assert (
+        "You: " in result.stdout or "You:" in result.stdout
+    )  # Depending on implementation
+    assert "AI: " in result.stdout
 
-            # Verify the CLI printed the AI prefix
-            assert "AI: " in output
-            # We can't assert the exact text, but we know it shouldn't be empty
-            assert len(output.strip()) > 0
+    # We expect some response content (hard to predict exact text)
+    # But checking for the AI prefix confirms the loop ran.
