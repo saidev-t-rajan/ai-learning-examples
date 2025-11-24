@@ -1,19 +1,11 @@
 import pytest
-
-# TDD: Import will fail initially
-try:
-    from app.core.chat_service import ChatService
-except ImportError:
-    ChatService = None
+from app.core.chat_service import ChatService
 
 
 def test_chat_service_structure(settings, repo):
     """
     Test that the ChatService class exists and has a get_response method.
     """
-    if ChatService is None:
-        pytest.fail("app.core.chat_service module not found")
-
     service = ChatService(repo=repo, settings=settings)
     assert hasattr(service, "get_response")
 
@@ -58,9 +50,6 @@ def test_get_response_real_api(settings, repo):
     Test that get_response calls the REAL OpenAI API and returns valid content.
     This test makes a real network request.
     """
-    if ChatService is None:
-        pytest.fail("ChatService not found")
-
     service = ChatService(repo=repo, settings=settings)
 
     # We use a simple prompt to verify connectivity
@@ -87,9 +76,6 @@ def test_memory_recall_real_llm(settings, repo):
     We simulate a 'restart' by creating a new ChatService instance
     connected to the same repository.
     """
-    if ChatService is None:
-        pytest.fail("ChatService not found")
-
     # Session 1: Teach the AI
     service1 = ChatService(repo=repo, settings=settings)
     list(service1.get_response("My name is Alice. Please remember this."))

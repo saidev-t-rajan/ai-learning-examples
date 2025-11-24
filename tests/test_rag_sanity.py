@@ -12,23 +12,21 @@ def test_manual_rag_sanity_check():
     query = "What is the name of the ship in Moby Dick?"
 
     # We execute the retrieval
-    result = service.retrieve(query)
+    results = service.retrieve(query)
 
     # We log the result for manual inspection if needed (use -s to see)
     print(f"\nQuery: {query}")
     print("--- Result ---")
-    print(result)
+    print(results)
     print("--------------")
 
-    # This assertion mimics the old script's check.
-    # It might fail if Moby Dick hasn't been ingested, but that is a useful signal for a sanity check.
-    # If the specific word "Pequod" isn't found due to embedding model limitations,
-    # finding "Ahab" or "Moby Dick" is sufficient to prove the RAG pipeline is working.
-    result_lower = result.lower()
+    # Combine all text from results for the check
+    combined_text = " ".join([text for text, _ in results]).lower()
+
     is_relevant = (
-        "pequod" in result_lower
-        or "ahab" in result_lower
-        or "moby dick" in result_lower
+        "pequod" in combined_text
+        or "ahab" in combined_text
+        or "moby dick" in combined_text
     )
 
     assert is_relevant, (

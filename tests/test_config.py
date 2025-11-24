@@ -1,12 +1,7 @@
 import pytest
 import os
 from pydantic import ValidationError
-
-# TDD: We expect this import to fail initially
-try:
-    from app.core.config import Settings
-except ImportError:
-    Settings = None
+from app.core.config import Settings
 
 
 def test_settings_validation():
@@ -17,9 +12,6 @@ def test_settings_validation():
     Pydantic Settings automatically validates environment variables.
     We ensure the app crashes early if 'OPENAI_API_KEY' is missing.
     """
-    if Settings is None:
-        pytest.fail("app.core.config module not found")
-
     # Manual environment management instead of patch.dict
     original_key = os.environ.get("OPENAI_API_KEY")
 
@@ -41,9 +33,6 @@ def test_settings_loading():
     """
     Test that Settings loads correctly from the real environment (.env.test).
     """
-    if Settings is None:
-        pytest.fail("app.core.config module not found")
-
     # The pytest-dotenv plugin (configured in pytest.ini) loads .env.test into os.environ
     # So Settings() will naturally pick up those values.
     config = Settings()

@@ -6,6 +6,10 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = Field(..., description="The API key for OpenAI")
     OPENAI_BASE_URL: str = Field(..., description="The Base URL for the OpenAI API")
     MODEL_NAME: str = Field("gpt-4o", description="The model to use")
+    CHROMA_DB_DIR: str = Field(
+        "data/chroma_db", description="Path to ChromaDB persistence directory"
+    )
+    CORPUS_DIR: str = Field("data/corpus", description="Path to document corpus")
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

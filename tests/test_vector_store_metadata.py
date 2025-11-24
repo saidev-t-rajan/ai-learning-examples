@@ -2,7 +2,6 @@ import shutil
 import os
 import pytest
 from app.db.vector import ChromaVectorStore
-from app.rag.embeddings import LocalEmbeddings
 
 
 @pytest.fixture
@@ -21,19 +20,14 @@ def vector_store():
 
 
 def test_similarity_search_returns_metadata(vector_store):
-    embeddings = LocalEmbeddings()
-
     # Act: Add documents with metadata
     vector_store.add_documents(
         texts=["Apple is a fruit."],
         metadatas=[{"source": "fruit_wiki.pdf"}],
-        embedding_service=embeddings,
     )
 
     # Act: Search
-    results = vector_store.similarity_search(
-        query="Apple", k=1, embedding_service=embeddings
-    )
+    results = vector_store.similarity_search(query="Apple", k=1)
 
     # Assert
     assert len(results) == 1

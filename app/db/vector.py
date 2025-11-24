@@ -1,109 +1,99 @@
-import uuid
-import os
-from typing import List, Protocol, Optional
+import hashlib
+from collections.abc import Sequence
+from typing import cast
 import chromadb
-
-
-class EmbeddingService(Protocol):
-    def embed_documents(self, texts: List[str]) -> List[List[float]]: ...
-
-    def embed_query(self, text: str) -> List[float]: ...
+from chromadb.api import ClientAPI
+from chromadb.api.types import Metadata as ChromaMetadata, QueryResult
+from app.rag import embeddings
+from app.types import Metadata
 
 
 class ChromaVectorStore:
+    """ChromaDB-based vector store for document embeddings.
+
+    Note: This implementation converts ChromaDB's immutable metadata Mappings
+    to mutable dicts on retrieval, which may not support all ChromaDB types
+    (e.g. SparseVector).
+    """
+
+    client: ClientAPI
+    collection_name: str
+
     def __init__(
         self,
+        persist_directory: str,
         collection_name: str = "documents",
-        persist_directory: str = None,
-    ):
-        if persist_directory is None:
-            # Default to <project_root>/data/chroma_db
-            # This file is in app/db/vector.py -> ../../data/chroma_db
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            project_root = os.path.dirname(os.path.dirname(current_dir))
-            persist_directory = os.path.join(project_root, "data", "chroma_db")
-
+    ) -> None:
         self.client = chromadb.PersistentClient(path=persist_directory)
         self.collection_name = collection_name
 
     def add_documents(
         self,
-        texts: List[str],
-        metadatas: Optional[List[dict]] = None,
-        embedding_service: EmbeddingService = None,
-    ):
+        texts: list[str],
+        metadatas: Sequence[ChromaMetadata] | None = None,
+    ) -> None:
         """
         Add documents to the store.
         Args:
             texts: List of string content.
-            metadatas: Optional list of metadata dicts.
-            embedding_service: Service to generate embeddings.
+            metadatas: Optional list of metadata mappings.
         """
-        if not embedding_service:
-            raise ValueError("Embedding service is required to add documents.")
-
         collection = self.client.get_or_create_collection(name=self.collection_name)
+        doc_embeddings = embeddings.embed_documents(texts)
 
-        embeddings = embedding_service.embed_documents(texts)
+        ids = []
+        for i, text in enumerate(texts):
+            source = ""
+            if metadatas and i < len(metadatas):
+                # We rely on 'source' being a string or simpler type in metadata
+                source = str(metadatas[i].get("source", ""))
 
-        # Generate IDs if not provided in metadata (or just random UUIDs for now)
-        # Chroma requires 'ids' list.
-        ids = [str(uuid.uuid4()) for _ in texts]
+            # Create a deterministic ID based on source and content
+            # This prevents duplicate entries if the same file is ingested twice
+            unique_str = f"{source}::{text}"
+            ids.append(hashlib.md5(unique_str.encode("utf-8")).hexdigest())
 
-        # Chroma/SQLite has a limit on the number of parameters in a query.
-        # We process in batches to avoid "Batch size is greater than max batch size" errors.
-        batch_size = 5000
-        total_docs = len(texts)
+        collection.upsert(
+            documents=texts,
+            embeddings=cast(list[Sequence[float]], doc_embeddings),
+            metadatas=cast(list[ChromaMetadata], metadatas)
+            if metadatas is not None
+            else None,
+            ids=ids,
+        )
 
-        for i in range(0, total_docs, batch_size):
-            end_idx = min(i + batch_size, total_docs)
+    def _process_search_results(
+        self, results: QueryResult
+    ) -> list[tuple[str, Metadata]]:
+        """Extract documents and metadata from Chroma query results."""
+        # Handle Optional types explicitly for type safety
+        docs_list = results.get("documents")
+        if not docs_list or not docs_list[0]:
+            return []
 
-            batch_texts = texts[i:end_idx]
-            batch_embeddings = embeddings[i:end_idx]
-            batch_ids = ids[i:end_idx]
-            batch_metadatas = metadatas[i:end_idx] if metadatas else None
+        docs = docs_list[0]
 
-            collection.add(
-                documents=batch_texts,
-                embeddings=batch_embeddings,
-                metadatas=batch_metadatas,
-                ids=batch_ids,
-            )
+        metas_list = results.get("metadatas")
+        metas = metas_list[0] if metas_list and metas_list[0] else []
 
-    def similarity_search(
-        self, query: str, k: int = 5, embedding_service: EmbeddingService = None
-    ) -> List[tuple[str, dict]]:
+        # Chroma may return None for metas if not set
+        if not metas:
+            metas = [{}] * len(docs)  # type: ignore
+
+        # Convert Mapping to dict
+        return [(doc, cast(Metadata, dict(meta))) for doc, meta in zip(docs, metas)]
+
+    def similarity_search(self, query: str, k: int = 5) -> list[tuple[str, Metadata]]:
         """
         Return top k documents similar to query with their metadata.
         Returns: List[(text, metadata)]
         """
-        if not embedding_service:
-            raise ValueError("Embedding service is required for search.")
-
-        # Use get_or_create_collection to avoid crashing if the collection doesn't exist yet
         collection = self.client.get_or_create_collection(name=self.collection_name)
-
-        query_vector = embedding_service.embed_query(query)
+        query_vector = embeddings.embed_query(query)
 
         results = collection.query(
-            query_embeddings=[query_vector],
+            query_embeddings=cast(list[Sequence[float]], [query_vector]),
             n_results=k,
         )
 
-        # results['documents'] is List[List[str]]
-        # results['metadatas'] is List[List[dict]]
-        found_docs = []
-        if results["documents"] and results["metadatas"]:
-            docs = results["documents"][0]
-            metas = results["metadatas"][0]
-            # Handle case where metas might be None if not stored (though add_documents usually ensures it)
-            # Chroma might return None in the list if no metadata?
-            # Safest is to zip.
-            for doc, meta in zip(docs, metas):
-                found_docs.append((doc, meta if meta else {}))
-        elif results["documents"]:
-            # Fallback if no metadata found
-            for doc in results["documents"][0]:
-                found_docs.append((doc, {}))
-
-        return found_docs
+        return self._process_search_results(results)

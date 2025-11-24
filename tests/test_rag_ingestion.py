@@ -1,14 +1,13 @@
 import pytest
-from app.rag.loader import DocumentLoader
-from app.rag.splitter import RecursiveCharacterTextSplitter
+from app.rag.loader import load_document
+from app.rag.splitter import split_text
 
 # --- Test DocumentLoader ---
 
 
 def test_document_loader_file_not_found():
-    loader = DocumentLoader()
     with pytest.raises(FileNotFoundError):
-        loader.load("non_existent_file.pdf")
+        load_document("non_existent_file.pdf")
 
 
 def test_document_loader_extracts_pdf_text(tmp_path):
@@ -30,8 +29,7 @@ def test_document_loader_extracts_pdf_text(tmp_path):
 
     pdf_path.write_bytes(minimal_pdf_content)
 
-    loader = DocumentLoader()
-    text = loader.load(str(pdf_path))
+    text = load_document(str(pdf_path))
 
     # pypdf should extract "Hello World"
     assert "Hello World" in text
@@ -42,86 +40,49 @@ def test_document_loader_extracts_txt_text(tmp_path):
     txt_path = tmp_path / "test.txt"
     txt_path.write_text("This is a simple text file.", encoding="utf-8")
 
-    loader = DocumentLoader()
-    text = loader.load(str(txt_path))
+    text = load_document(str(txt_path))
 
     assert "This is a simple text file." in text
 
 
-# --- Test RecursiveCharacterTextSplitter ---
+# --- Test TextSplitter ---
 
 
-def test_splitter_simple_split():
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=10, chunk_overlap=0, separators=[" "]
-    )
-    text = "abc def ghi"
-    chunks = splitter.split_text(text)
-    # Expect: "abc", "def", "ghi" -> but merge?
-    # "abc" (3) -> fit
-    # "abc def" (7) -> fit
-    # "abc def ghi" (11) -> too big
-    # So it should contain "abc def", then overlap?
-    # Logic: "abc def" (7). Next is "ghi". 7+3+1 = 11 > 10.
-    # Emit "abc def".
-    # Current doc becomes empty (overlap 0).
-    # Add "ghi".
-    assert chunks == ["abc def", "ghi"]
+def test_splitter_simple_no_split():
+    """Test that text smaller than chunk_size is returned as a single chunk."""
+    text = "12345"
+    chunks = split_text(text, chunk_size=10, chunk_overlap=0)
+    assert chunks == ["12345"]
+
+
+def test_splitter_exact_split():
+    """Test splitting exactly at the chunk size."""
+    text = "1234567890"
+    chunks = split_text(text, chunk_size=5, chunk_overlap=0)
+    assert chunks == ["12345", "67890"]
 
 
 def test_splitter_with_overlap():
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=10, chunk_overlap=4, separators=[" "]
-    )
-    text = "abc def ghi jkl"
-    # "abc def" (7) -> fits
-    # + "ghi" (3) -> 7+1+3 = 11 > 10.
-    # Emit "abc def".
-    # Overlap: "def" (3) -> keep? 3 <= 4.
-    # Current = ["def"].
-    # Add "ghi" -> "def ghi" (7).
-    # + "jkl" (3) -> 7+1+3 = 11 > 10.
-    # Emit "def ghi".
-    # Overlap: "ghi" (3).
-    # Current = ["ghi"].
-    # Add "jkl" -> "ghi jkl" (7).
-    # Emit "ghi jkl".
-    chunks = splitter.split_text(text)
-    assert chunks == ["abc def", "def ghi", "ghi jkl"]
+    """Test splitting with overlap."""
+    text = "123456789"
+    # Chunk 1: 0-5 -> "12345"
+    # Step: 5 - 2 = 3
+    # Chunk 2: 3-8 -> "45678"
+    # Step: 3 + 3 = 6
+    # Chunk 3: 6-11 -> "789" (remainder)
+    chunks = split_text(text, chunk_size=5, chunk_overlap=2)
+    assert chunks == ["12345", "45678", "789"]
 
 
-def test_splitter_recursive():
-    # Test where it must go down to characters
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=5, chunk_overlap=1, separators=[" "]
-    )
-    text = "abcdefgh"  # No spaces, 8 chars
-    chunks = splitter.split_text(text)
-    # Should force split: "abcde", "fgh" (with overlap?)
-    # "abcde" (5)
-    # Overlap 1: "e"
-    # "efgh" (4)
-    # Wait, my force_split logic:
-    # range(0, 8, 5-1=4) -> 0, 4
-    # 0:5 -> "abcde"
-    # 4:9 -> "efgh"
-    assert chunks == ["abcde", "efgh"]
-
-
-def test_splitter_separators():
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=20, chunk_overlap=0, separators=["\n\n", "\n"]
-    )
-    text = "Para1.\n\nPara2 is longer.\nIt has two lines."
-    # Para1. (6)
-    # Para2 is longer.\nIt has two lines. (16+1+17 = 34) -> Too big.
-    # Split by \n: "Para2 is longer." (16), "It has two lines." (17).
-    # All chunks < 20?
-    # "Para1." (6) -> chunk
-    # "Para2 is longer." (16) -> chunk
-    # "It has two lines." (17) -> chunk
-    chunks = splitter.split_text(text)
-    assert len(chunks) == 3
-    assert chunks[0] == "Para1."
-    assert chunks[1] == "Para2 is longer."
-    assert chunks[2] == "It has two lines."
+def test_splitter_does_not_infinite_loop():
+    """Ensure no infinite loop if overlap is too large."""
+    # If overlap >= chunk_size, we might get stuck if we aren't careful.
+    # Our implementation uses `start += chunk_size - chunk_overlap`
+    text = "12345678901"  # 11 chars
+    # C1: 0-10 -> "1234567890"
+    # Step: 10 - 9 = 1
+    # C2: 1-11 -> "2345678901"
+    chunks = split_text(text, chunk_size=10, chunk_overlap=9)
+    assert len(chunks) == 2
+    assert chunks[0] == "1234567890"
+    assert chunks[1] == "2345678901"

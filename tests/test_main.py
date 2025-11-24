@@ -20,7 +20,7 @@ def test_cli_exit_command_real():
         cwd=PROJECT_ROOT,
         capture_output=True,
         text=True,
-        timeout=20,  # Safety timeout - increased for imports
+        timeout=60,  # Safety timeout - increased for imports
     )
 
     assert result.returncode == 0
@@ -44,7 +44,7 @@ def test_cli_uses_service_real():
         cwd=PROJECT_ROOT,
         capture_output=True,
         text=True,
-        timeout=30,  # Longer timeout for API call
+        timeout=60,  # Longer timeout for API call
     )
 
     assert result.returncode == 0

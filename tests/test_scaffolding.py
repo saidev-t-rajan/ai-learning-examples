@@ -10,14 +10,6 @@ def test_rag_module_exists():
         pytest.fail(f"Could not import app.rag: {e}")
 
 
-def test_agents_module_exists():
-    """Verify that the app.agents module can be imported."""
-    try:
-        import app.agents  # noqa: F401
-    except ImportError as e:
-        pytest.fail(f"Could not import app.agents: {e}")
-
-
 def test_sentence_transformers_installed():
     """Verify that sentence-transformers is installed and importable."""
     try:

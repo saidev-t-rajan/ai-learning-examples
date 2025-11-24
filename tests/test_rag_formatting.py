@@ -1,14 +1,11 @@
 import pytest
 from app.rag.service import RAGService
 from app.db.vector import ChromaVectorStore
-from app.rag.embeddings import LocalEmbeddings
 
 
 @pytest.mark.integration
-def test_retrieve_formats_citations(tmp_path):
+def test_retrieve_returns_correct_metadata(tmp_path):
     # Setup - Use real components
-    embeddings = LocalEmbeddings()
-
     # Isolate DB
     store = ChromaVectorStore(
         collection_name="test_formatting", persist_directory=str(tmp_path / "chroma_db")
@@ -17,19 +14,28 @@ def test_retrieve_formats_citations(tmp_path):
     # Add documents manually to the store
     texts = ["The sky is blue.", "Roses are red."]
     metadatas = [{"source": "nature.pdf"}, {"source": "poetry.txt"}]
-    store.add_documents(texts, metadatas, embedding_service=embeddings)
+    store.add_documents(texts, metadatas)
 
     service = RAGService(vector_store=store)
 
     # Act
     # We query for something that matches the documents
     # "colors" might match "blue" and "red"
-    result = service.retrieve("colors")
+    results = service.retrieve("colors")
 
     # Assert
-    # The order might vary, so we check for existence of formatted strings
-    expected_part_1 = "(Source: nature.pdf)\nThe sky is blue."
-    expected_part_2 = "(Source: poetry.txt)\nRoses are red."
+    # Verify we get a list of (text, metadata) tuples
+    assert isinstance(results, list)
 
-    assert expected_part_1 in result
-    assert expected_part_2 in result
+    # We expect to find our documents with their metadata
+    found_nature = False
+    found_poetry = False
+
+    for text, meta in results:
+        if "The sky is blue." in text and meta.get("source") == "nature.pdf":
+            found_nature = True
+        if "Roses are red." in text and meta.get("source") == "poetry.txt":
+            found_poetry = True
+
+    assert found_nature, "Did not find nature document with correct metadata"
+    assert found_poetry, "Did not find poetry document with correct metadata"
