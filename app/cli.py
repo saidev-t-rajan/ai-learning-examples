@@ -4,15 +4,18 @@ from typing import TYPE_CHECKING
 from app.core.config import Settings
 from app.core.chat_service import ChatService
 from app.rag.service import RAGService
+from app.agents.models import HealerMetrics
 
 if TYPE_CHECKING:
     from app.agents.planning import PlanningService
+    from app.agents.healer import HealerService
 
 # Command constants
 EXIT = "/exit"
 INGEST = "/ingest"
 INGEST_ALL = "/ingest_all"
 PLAN = "/plan"
+HEAL = "/heal"
 
 SEPARATOR_LINE = "-" * 30
 
@@ -64,11 +67,13 @@ class CLI:
         rag_service: RAGService,
         settings: Settings,
         planning_service: "PlanningService | None" = None,
+        healer_service: "HealerService | None" = None,
     ):
         self.chat_service = chat_service
         self.rag_service = rag_service
         self.settings = settings
         self.planning_service = planning_service
+        self.healer_service = healer_service
 
     def run(self) -> None:
         """Start the interactive chat loop."""
@@ -77,6 +82,7 @@ class CLI:
         print(f"Type '{INGEST} <path>' to load a document.")
         print(f"Type '{INGEST_ALL} [--large]' to load all corpus documents.")
         print(f"Type '{PLAN} <request>' to plan a trip with AI agent.")
+        print(f"Type '{HEAL} <task>' to generate and fix code with AI.")
 
         while True:
             try:
@@ -111,6 +117,15 @@ class CLI:
 
         if user_input.startswith(PLAN + " "):
             self._handle_plan(user_input)
+            return True
+
+        if user_input.startswith(HEAL):
+            task_description = user_input[len(HEAL) :].strip()
+            if not task_description:
+                print("Usage: /heal <coding task description>")
+                return True
+
+            self._handle_heal_command(task_description)
             return True
 
         return False
@@ -151,6 +166,22 @@ class CLI:
                 print(f"\n[Stats] {step.content}", flush=True)
 
         print()
+
+    def _handle_heal_command(self, task_description: str) -> None:
+        if not self.healer_service:
+            print("Healer service not available")
+            return
+
+        for chunk in self.healer_service.heal_code(task_description):
+            if chunk.content:
+                print(chunk.content, end="", flush=True)
+            if chunk.metrics:
+                self._print_healer_metrics(chunk.metrics)
+
+    def _print_healer_metrics(self, metrics: HealerMetrics) -> None:
+        status = "SUCCESS" if metrics.successful else "FAILED"
+        print(f"\n[{status}] Attempts: {metrics.total_attempts}")
+        print(f"Total time: {metrics.total_execution_time_seconds:.2f}s")
 
     def _process_chat(self, user_input: str) -> None:
         print("AI: ", end="", flush=True)

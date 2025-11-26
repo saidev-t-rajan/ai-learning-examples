@@ -8,6 +8,7 @@ from app.db.memory import ChatRepository
 from app.rag.service import RAGService
 from app.cli import CLI
 from app.agents.planning import PlanningService
+from app.agents.healer import HealerService
 
 
 def configure_logging(verbose: bool = False) -> None:
@@ -53,12 +54,16 @@ def main() -> None:
     rag_service = RAGService(settings=settings)
     chat_service = ChatService(repo=repo, rag_service=rag_service, settings=settings)
     planning_service = PlanningService(settings=settings)
+    healer_service = HealerService(
+        chat_service=chat_service, max_attempts=3, timeout_seconds=30
+    )
 
     cli = CLI(
         chat_service=chat_service,
         rag_service=rag_service,
         settings=settings,
         planning_service=planning_service,
+        healer_service=healer_service,
     )
     cli.run()
 

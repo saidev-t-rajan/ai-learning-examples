@@ -1,3 +1,4 @@
+import shlex
 import subprocess
 import tempfile
 from pathlib import Path
@@ -13,15 +14,20 @@ class CodeExecutor:
             self.work_dir.mkdir(parents=True, exist_ok=True)
         self.timeout_seconds = timeout_seconds
 
-    def execute_python(self, code: str) -> ExecutionResult:
-        test_file_path = self.work_dir / "test_solution.py"
-        test_file_path.write_text(code)
+    def execute_project(
+        self, files: list[dict[str, str]], command: str
+    ) -> ExecutionResult:
+        for file_info in files:
+            file_path = self.work_dir / file_info["path"]
+            file_path.parent.mkdir(parents=True, exist_ok=True)
+            file_path.write_text(file_info["content"])
 
+        command_args = shlex.split(command)
         start_time = time()
 
         try:
             process_result = subprocess.run(
-                ["python", "-m", "pytest", str(test_file_path), "-v"],
+                command_args,
                 capture_output=True,
                 text=True,
                 timeout=self.timeout_seconds,
@@ -38,6 +44,15 @@ class CodeExecutor:
                 execution_time_seconds=execution_time,
             )
 
+        except FileNotFoundError:
+            execution_time = time() - start_time
+            return ExecutionResult(
+                success=False,
+                stdout="",
+                stderr=f"Command not found: {command_args[0] if command_args else ''}",
+                exit_code=127,
+                execution_time_seconds=execution_time,
+            )
         except subprocess.TimeoutExpired:
             execution_time = time() - start_time
             return ExecutionResult(
@@ -47,6 +62,12 @@ class CodeExecutor:
                 exit_code=-1,
                 execution_time_seconds=execution_time,
             )
+
+    def execute_python(self, code: str) -> ExecutionResult:
+        return self.execute_project(
+            files=[{"path": "test_solution.py", "content": code}],
+            command="python -m pytest test_solution.py -v",
+        )
 
     def execute_rust(self, code: str) -> ExecutionResult:
         raise NotImplementedError("Rust execution not yet implemented")
