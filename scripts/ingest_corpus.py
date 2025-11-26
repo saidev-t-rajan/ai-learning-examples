@@ -6,7 +6,7 @@ import argparse
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__))))
 
 from app.rag.service import RAGService
-from app.main import ingest_directory_with_report
+from app.cli import ingest_directory_with_report
 from app.core.config import Settings
 
 

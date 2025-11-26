@@ -44,7 +44,7 @@ def test_cli_uses_service_real():
         cwd=PROJECT_ROOT,
         capture_output=True,
         text=True,
-        timeout=60,  # Longer timeout for API call
+        timeout=120,  # Longer timeout for API call
     )
 
     assert result.returncode == 0

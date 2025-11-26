@@ -6,8 +6,19 @@ from app.rag.loader import load_document
 from app.rag.splitter import split_text
 from app.db.vector import ChromaVectorStore
 from app.core.config import Settings
-import os
+from app.core.utils import validate_directory_path
+from app.core.models import RetrievalResult
 import time
+import logging
+
+logger = logging.getLogger(__name__)
+
+RAG_CONTEXT_TEMPLATE = (
+    "\n\nUse the following context to answer the question.\n"
+    "Answer using ONLY the following context. Cite sources using the format [1], [2], etc.\n\n"
+    "{context}"
+)
+RAG_DISTANCE_THRESHOLD = 1.0
 
 
 class RAGService:
@@ -24,6 +35,34 @@ class RAGService:
             else ChromaVectorStore(persist_directory=self.settings.CHROMA_DB_DIR)
         )
 
+    def retrieve_context(self, query: str) -> RetrievalResult:
+        """
+        Retrieve relevant context for the query, format it for the LLM,
+        and calculate success metrics.
+        """
+        # 1. Retrieve raw results
+        results = self.retrieve(query)
+
+        # 2. Calculate Metrics
+        distances = [score for _, _, score in results]
+        avg_distance = sum(distances) / len(distances) if distances else None
+        rag_success = avg_distance is not None and avg_distance < RAG_DISTANCE_THRESHOLD
+
+        # 3. Format Context
+        formatted_context = ""
+        if results:
+            formatted_chunks = "\n\n".join(
+                f"[{i}] (Source: {meta.get('source', 'Unknown')})\n{text}"
+                for i, (text, meta, _) in enumerate(results, 1)
+            )
+            formatted_context = RAG_CONTEXT_TEMPLATE.format(context=formatted_chunks)
+
+        return RetrievalResult(
+            formatted_context=formatted_context,
+            avg_distance=avg_distance,
+            is_success=rag_success,
+        )
+
     def ingest_directory(
         self, directory_path: str
     ) -> Generator[tuple[str, int], None, None]:
@@ -31,20 +70,19 @@ class RAGService:
         Ingests all supported documents from a directory.
         Yields tuples of (filename, chunk_count).
         """
-        if not os.path.exists(directory_path):
-            raise ValueError(f"Directory not found: {directory_path}")
+        valid_dir = validate_directory_path(directory_path)
 
         files = sorted(
             [
-                f
-                for f in os.listdir(directory_path)
-                if f.lower().endswith((".txt", ".pdf"))
+                f.name
+                for f in valid_dir.iterdir()
+                if f.is_file() and f.suffix.lower() in (".txt", ".pdf")
             ]
         )
 
         for filename in files:
-            filepath = os.path.join(directory_path, filename)
-            chunks = self.ingest(filepath)
+            filepath = valid_dir / filename
+            chunks = self.ingest(str(filepath))
             yield (filename, chunks)
 
     def ingest(self, path: str) -> int:
@@ -87,6 +125,6 @@ class RAGService:
 
         duration = time.time() - start_time
         if duration > 0.3:
-            print(f"Warning: Retrieval took {duration:.2f}s")
+            logger.warning(f"Retrieval took {duration:.2f}s")
 
         return results

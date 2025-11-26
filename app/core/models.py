@@ -1,4 +1,12 @@
 from pydantic import BaseModel
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class RetrievalResult:
+    formatted_context: str
+    avg_distance: float | None
+    is_success: bool
 
 
 class ChatMetrics(BaseModel):

@@ -32,3 +32,22 @@ services:
       - .env.test
     profiles:
       - test
+
+  ai-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: release
+    image: ai-web:latest
+    container_name: ai-web
+    user: "${UID:-1000}:${GID:-1000}"
+    env_file:
+      - .env
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./data:/app/data
+      - ./.cache:/app/.cache
+    command: streamlit run app/web/main.py
+    stdin_open: true
+    tty: true

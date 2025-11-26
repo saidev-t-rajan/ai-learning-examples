@@ -10,17 +10,10 @@ from app.db.memory import ChatRepository
 from app.core.models import ChatMetrics, ChatChunk
 from app.core.utils import calculate_cost
 from app.rag.service import RAGService
-from app.types import Metadata
 
 
 MAX_HISTORY_MESSAGES = 10
 DEFAULT_SYSTEM_PROMPT = "You are a helpful assistant."
-RAG_CONTEXT_TEMPLATE = (
-    "\n\nUse the following context to answer the question.\n"
-    "Answer using ONLY the following context. Cite sources using the format [1], [2], etc.\n\n"
-    "{context}"
-)
-RAG_DISTANCE_THRESHOLD = 1.0
 
 
 class ChatService:
@@ -46,17 +39,18 @@ class ChatService:
         self.repo.add_message("user", message)
 
         # 1. Retrieve Context & Scores
-        context_results: list[tuple[str, Metadata, float]] = []
+        rag_context = ""
+        avg_distance: float | None = None
+        rag_success = False
+
         if self.rag_service:
-            context_results = self.rag_service.retrieve(message)
+            retrieval_result = self.rag_service.retrieve_context(message)
+            rag_context = retrieval_result.formatted_context
+            avg_distance = retrieval_result.avg_distance
+            rag_success = retrieval_result.is_success
 
         # 2. Prepare Messages
-        messages = self._prepare_messages(context_results)
-
-        # 3. Calculate RAG Metrics
-        distances = [score for _, _, score in context_results]
-        avg_distance = sum(distances) / len(distances) if distances else None
-        rag_success = avg_distance is not None and avg_distance < RAG_DISTANCE_THRESHOLD
+        messages = self._prepare_messages(rag_context)
 
         start_time = time.time()
         ttft = 0.0
@@ -120,13 +114,13 @@ class ChatService:
 
     def _prepare_messages(
         self,
-        context_results: list[tuple[str, Metadata, float]],
+        rag_context: str,
     ) -> list[ChatCompletionMessageParam]:
         history = self.repo.get_recent_messages(limit=MAX_HISTORY_MESSAGES)
         system_prompt = DEFAULT_SYSTEM_PROMPT
 
-        if context_results:
-            system_prompt += self._format_rag_context(context_results)
+        if rag_context:
+            system_prompt += rag_context
 
         messages: list[ChatCompletionMessageParam] = [
             {"role": "system", "content": system_prompt}
@@ -139,14 +133,3 @@ class ChatService:
             )
 
         return messages
-
-    def _format_rag_context(
-        self,
-        context_results: list[tuple[str, Metadata, float]],
-    ) -> str:
-        # Ignore score for formatting
-        formatted_context = "\n\n".join(
-            f"[{i}] (Source: {meta.get('source', 'Unknown')})\n{text}"
-            for i, (text, meta, _) in enumerate(context_results, 1)
-        )
-        return RAG_CONTEXT_TEMPLATE.format(context=formatted_context)

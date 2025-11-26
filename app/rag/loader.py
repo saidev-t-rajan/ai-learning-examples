@@ -1,6 +1,6 @@
 import pypdf
-import os
 import re
+from app.core.utils import validate_file_path
 
 
 def load_document(file_path: str) -> str:
@@ -8,18 +8,15 @@ def load_document(file_path: str) -> str:
     Loads a file (PDF or TXT) and extracts all text content.
     Cleans the text by replacing single newlines with spaces (unwrapping).
     """
-    if not os.path.exists(file_path):
-        raise FileNotFoundError(f"File not found: {file_path}")
+    valid_path = validate_file_path(file_path, allowed_extensions=[".txt", ".pdf"])
 
     text = ""
-    if file_path.endswith(".txt"):
-        text = _load_txt(file_path)
+    # validate_file_path ensures the suffix is correct, but we check again for dispatch
+    if valid_path.suffix.lower() == ".txt":
+        text = _load_txt(str(valid_path))
 
-    elif file_path.endswith(".pdf"):
-        text = _load_pdf(file_path)
-
-    else:
-        raise ValueError(f"Unsupported file type: {file_path}")
+    elif valid_path.suffix.lower() == ".pdf":
+        text = _load_pdf(str(valid_path))
 
     return _clean_text(text)
 
@@ -43,14 +40,7 @@ def _clean_text(text: str) -> str:
     """
     Replaces single newlines with spaces, but keeps paragraph breaks (double newlines).
     """
-    # 1. Replace 3+ newlines with 2
     text = re.sub(r"\n{3,}", "\n\n", text)
-
-    # 2. Split by paragraph (double newline)
     paragraphs = text.split("\n\n")
-
-    # 3. Unwrap lines within each paragraph
     cleaned_paragraphs = [para.replace("\n", " ") for para in paragraphs]
-
-    # 4. Rejoin paragraphs
     return "\n\n".join(cleaned_paragraphs)

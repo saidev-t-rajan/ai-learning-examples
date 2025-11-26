@@ -73,19 +73,6 @@ class ChromaVectorStore:
         if not docs:
             return []
 
-        # If metas or dists are None (e.g. not included in query), zip will truncate.
-        # However, similarity_search always includes them.
-        # We rely on Chroma returning parallel lists.
-        # If metas is [None, None] (parallel), it works.
-        # If metas is [] (empty/missing), it implies no docs or mismatch.
-
-        # Fallback: if lists are missing/empty but docs exist, pad them.
-        # This handles cases where Chroma might return None for empty metadata list?
-        if not metas and docs:
-            metas = [None] * len(docs)  # type: ignore
-        if not dists and docs:
-            dists = [0.0] * len(docs)  # type: ignore
-
         return [
             (doc, cast(Metadata, dict(meta or {})), dist)
             for doc, meta, dist in zip(docs, metas, dists)

@@ -1,12 +1,13 @@
 import pytest
 from app.rag.loader import load_document
 from app.rag.splitter import split_text
+from app.core.utils import ValidationError
 
 # --- Test DocumentLoader ---
 
 
 def test_document_loader_file_not_found():
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(ValidationError):
         load_document("non_existent_file.pdf")
 
 

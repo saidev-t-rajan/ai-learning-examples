@@ -53,5 +53,7 @@ RUN mkdir -p /app/data /app/.cache && chown -R appuser:appuser /app/data /app/.c
 
 USER appuser
 
+EXPOSE 8501
+
 ENTRYPOINT ["python", "-m"]
 CMD ["app.main"]
