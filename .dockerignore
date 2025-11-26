@@ -1,0 +1,52 @@
+# Python virtual environment and cache
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Git
+.git/
+.gitignore
+
+# Environment files
+.env
+.env.test
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+
+# Linting and formatting
+.ruff_cache/
+
+# IDE and editor files
+.claude/
+.vscode/
+.DS_Store
+*.swp
+*.swo
+
+# Runtime data (use volumes instead)
+# Excludes all data subdirectories: chroma_db, corpus, bm25_index, etc.
+data/
+tmp/
+.cache/
+
+# Logs
+*.log
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Docker files (self-reference)
+.dockerignore
+Dockerfile
+docker-compose.yml
+
+# Documentation and scripts
+*.md
+scripts/

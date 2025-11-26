@@ -32,5 +32,5 @@ def test_rag_ingest_and_retrieve_integration(tmp_path):
     results = service.retrieve("What is the secret code?")
 
     # Check if any result contains the secret code
-    found = any("BLUE-HORIZON-99" in text for text, _ in results)
+    found = any("BLUE-HORIZON-99" in text for text, _, _ in results)
     assert found, "Secret code not found in retrieval results"

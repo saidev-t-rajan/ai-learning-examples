@@ -2,101 +2,481 @@
     {
         "question": "What is the name of the ship in Moby Dick?",
         "expected_keywords": ["Pequod"],
-        "source": "moby_dick.txt"
+        "source": "moby_dick.txt",
+        "question_type": "factual"
     },
     {
         "question": "Who created the monster in Frankenstein?",
         "expected_keywords": ["Victor", "Frankenstein"],
-        "source": "frankenstein.txt"
+        "source": "frankenstein.txt",
+        "question_type": "factual"
     },
     {
         "question": "Who is the assistant of Sherlock Holmes?",
         "expected_keywords": ["Watson", "John"],
-        "source": "sherlock_holmes.txt"
+        "source": "sherlock_holmes.txt",
+        "question_type": "factual"
     },
     {
         "question": "Who does Elizabeth Bennet marry?",
         "expected_keywords": ["Darcy", "Fitzwilliam"],
-        "source": "pride_and_prejudice.txt"
+        "source": "pride_and_prejudice.txt",
+        "question_type": "factual"
     },
     {
         "question": "Who is the vampire hunter in Dracula?",
         "expected_keywords": ["Van Helsing"],
-        "source": "dracula.txt"
+        "source": "dracula.txt",
+        "question_type": "factual"
     },
     {
         "question": "Where does Sherlock Holmes live?",
         "expected_keywords": ["Baker Street"],
-        "source": "sherlock_holmes.txt"
+        "source": "sherlock_holmes.txt",
+        "question_type": "factual"
     },
     {
         "question": "What is the name of the island where the treasure is hidden in The Count of Monte Cristo?",
         "expected_keywords": ["Monte Cristo"],
-        "source": "count_of_monte_cristo.txt"
+        "source": "count_of_monte_cristo.txt",
+        "question_type": "factual"
     },
     {
         "question": "What color is the whale Moby Dick?",
         "expected_keywords": ["White"],
-        "source": "moby_dick.txt"
+        "source": "moby_dick.txt",
+        "question_type": "factual"
     },
     {
         "question": "Who is the primary narrator of Moby Dick?",
         "expected_keywords": ["Ishmael"],
-        "source": "moby_dick.txt"
+        "source": "moby_dick.txt",
+        "question_type": "factual"
     },
     {
         "question": "What weapon does Van Helsing use against vampires?",
         "expected_keywords": ["Stake", "Garlic", "Crucifix"],
-        "source": "dracula.txt"
+        "source": "dracula.txt",
+        "question_type": "factual"
     },
     {
         "question": "Who is the illegitimate son of Count Bezukhov in War and Peace?",
         "expected_keywords": ["Pierre", "Bezukhov"],
-        "source": "war_and_peace.txt"
+        "source": "war_and_peace.txt",
+        "question_type": "factual"
     },
     {
         "question": "Who is the main female protagonist in War and Peace?",
         "expected_keywords": ["Natasha", "Rostova"],
-        "source": "war_and_peace.txt"
+        "source": "war_and_peace.txt",
+        "question_type": "factual"
     },
     {
         "question": "Who is the main character in Ulysses?",
         "expected_keywords": ["Leopold", "Bloom"],
-        "source": "ulysses.txt"
+        "source": "ulysses.txt",
+        "question_type": "factual"
     },
     {
         "question": "In which city does Ulysses take place?",
         "expected_keywords": ["Dublin"],
-        "source": "ulysses.txt"
+        "source": "ulysses.txt",
+        "question_type": "factual"
     },
     {
         "question": "Who is the ring bearer in the Fellowship of the Ring?",
         "expected_keywords": ["Frodo", "Baggins"],
-        "source": "lotr_fellowship.pdf"
+        "source": "lotr_fellowship.pdf",
+        "question_type": "factual"
     },
     {
         "question": "Who is the wizard in the Fellowship of the Ring?",
         "expected_keywords": ["Gandalf", "Mithrandir"],
-        "source": "lotr_fellowship.pdf"
+        "source": "lotr_fellowship.pdf",
+        "question_type": "factual"
     },
     {
         "question": "Who is accused of murdering William Frankenstein?",
         "expected_keywords": ["Justine", "Moritz"],
-        "source": "frankenstein.txt"
+        "source": "frankenstein.txt",
+        "question_type": "factual"
     },
     {
         "question": "Who is the eldest Bennet sister?",
         "expected_keywords": ["Jane"],
-        "source": "pride_and_prejudice.txt"
+        "source": "pride_and_prejudice.txt",
+        "question_type": "factual"
     },
     {
         "question": "Who betrayed Edmond Dantes?",
         "expected_keywords": ["Danglars", "Fernand", "Mondego", "Villefort"],
-        "source": "count_of_monte_cristo.txt"
+        "source": "count_of_monte_cristo.txt",
+        "question_type": "factual"
     },
     {
         "question": "Who is the landlady of 221B Baker Street?",
         "expected_keywords": ["Mrs. Hudson", "Hudson"],
-        "source": "sherlock_holmes.txt"
+        "source": "sherlock_holmes.txt",
+        "question_type": "factual"
+    },
+    {
+        "question": "What motivates Captain Ahab's obsessive pursuit of Moby Dick?",
+        "expected_keywords": ["revenge", "vengeance", "leg", "injury", "hatred", "obsession"],
+        "source": "moby_dick.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "Why did Victor Frankenstein abandon his creation?",
+        "expected_keywords": ["horror", "fear", "disgust", "appearance", "ugly", "terrified"],
+        "source": "frankenstein.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "What is the relationship between Elizabeth Bennet and Mr. Darcy at the beginning of the novel?",
+        "expected_keywords": ["dislike", "prejudice", "proud", "arrogant", "conflict", "tension"],
+        "source": "pride_and_prejudice.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "How does the monster in Frankenstein learn to speak and read?",
+        "expected_keywords": ["observing", "watching", "family", "cottage", "De Lacey", "listening"],
+        "source": "frankenstein.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "What drives Edmond Dantes to seek revenge in The Count of Monte Cristo?",
+        "expected_keywords": ["betrayal", "imprisoned", "injustice", "false", "accused", "years"],
+        "source": "count_of_monte_cristo.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "Describe the nature of the relationship between Sherlock Holmes and Dr. Watson",
+        "expected_keywords": ["friendship", "partnership", "companion", "loyal", "trust", "respect"],
+        "source": "sherlock_holmes.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "What is the significance of the white whale in Moby Dick?",
+        "expected_keywords": ["symbol", "nature", "fate", "evil", "power", "mysterious", "unknowable"],
+        "source": "moby_dick.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "How does Dracula travel from Transylvania to England?",
+        "expected_keywords": ["ship", "sea", "voyage", "Demeter", "boxes", "earth", "coffin"],
+        "source": "dracula.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "What is the main conflict or struggle faced by Pierre Bezukhov in War and Peace?",
+        "expected_keywords": ["meaning", "purpose", "identity", "spiritual", "search", "happiness"],
+        "source": "war_and_peace.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "Why does Frodo volunteer to take the Ring to Mordor?",
+        "expected_keywords": ["duty", "responsibility", "burden", "danger", "courage", "must", "someone"],
+        "source": "lotr_fellowship.pdf",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "What themes of isolation and loneliness appear in Frankenstein?",
+        "expected_keywords": ["rejection", "abandoned", "alone", "outcast", "solitude", "companionship"],
+        "source": "frankenstein.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "How do the other characters in Pride and Prejudice view Mr. Darcy initially?",
+        "expected_keywords": ["proud", "arrogant", "disagreeable", "haughty", "aloof", "superior"],
+        "source": "pride_and_prejudice.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "What role does fate versus free will play in War and Peace?",
+        "expected_keywords": ["history", "inevitable", "predestined", "choices", "decisions", "individual", "forces"],
+        "source": "war_and_peace.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "How does Pierre Bezukhov's search for meaning evolve throughout War and Peace?",
+        "expected_keywords": ["purpose", "life", "family", "happiness", "spiritual", "transformation", "journey"],
+        "source": "war_and_peace.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "What is Tolstoy's perspective on patriotism in War and Peace?",
+        "expected_keywords": ["sacrifice", "noble", "glory", "violence", "death", "romance", "duty"],
+        "source": "war_and_peace.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "How does the relationship between Natasha and Pierre develop in War and Peace?",
+        "expected_keywords": ["love", "marriage", "genuine", "happiness", "mature", "understanding", "connection"],
+        "source": "war_and_peace.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "What does Tolstoy suggest about the role of great men in history in War and Peace?",
+        "expected_keywords": ["individuals", "moments", "decisions", "multitude", "forces", "illusion", "power"],
+        "source": "war_and_peace.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "How does War and Peace portray the violence and carnage of war?",
+        "expected_keywords": ["destruction", "suffering", "death", "inevitable", "brutal", "senseless", "horror"],
+        "source": "war_and_peace.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "What is the significance of Prince Andrei's transformation in War and Peace?",
+        "expected_keywords": ["disillusionment", "glory", "death", "meaning", "acceptance", "spiritual", "change"],
+        "source": "war_and_peace.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "How does Tolstoy explore the theme of marriage and family life in War and Peace?",
+        "expected_keywords": ["love", "duty", "happiness", "society", "children", "domestic", "relationships"],
+        "source": "war_and_peace.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "What role does Moscow play symbolically in War and Peace?",
+        "expected_keywords": ["Russia", "heart", "sacrifice", "fire", "Napoleon", "patriotism", "symbol"],
+        "source": "war_and_peace.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "How does Natasha Rostova's character evolve from youth to maturity in War and Peace?",
+        "expected_keywords": ["innocent", "impulsive", "mature", "mother", "experience", "suffering", "growth"],
+        "source": "war_and_peace.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "What is the relationship between individual action and historical inevitability in War and Peace?",
+        "expected_keywords": ["free will", "destiny", "choice", "forces", "control", "illusion", "fate"],
+        "source": "war_and_peace.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "How does War and Peace depict the Russian aristocracy's relationship with French culture?",
+        "expected_keywords": ["language", "fashion", "imitation", "identity", "foreign", "Russian", "society"],
+        "source": "war_and_peace.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "What does Pierre learn from his experience as a prisoner of war in War and Peace?",
+        "expected_keywords": ["simplicity", "wisdom", "suffering", "freedom", "spiritual", "meaning", "acceptance"],
+        "source": "war_and_peace.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "How does Tolstoy portray Napoleon in War and Peace?",
+        "expected_keywords": ["arrogant", "deluded", "powerless", "vanity", "illusion", "greatness", "failure"],
+        "source": "war_and_peace.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "What philosophical message about life does Tolstoy convey through War and Peace?",
+        "expected_keywords": ["accept", "simple", "family", "love", "meaning", "faith", "understanding"],
+        "source": "war_and_peace.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "What is the central moral question about revenge in The Count of Monte Cristo?",
+        "expected_keywords": ["justice", "vengeance", "justified", "consequences", "innocent", "suffering", "morality"],
+        "source": "count_of_monte_cristo.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "How does Edmond Dantes transform into the Count of Monte Cristo?",
+        "expected_keywords": ["education", "wealth", "treasure", "identity", "knowledge", "power", "disguise"],
+        "source": "count_of_monte_cristo.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "What role does divine providence play in The Count of Monte Cristo?",
+        "expected_keywords": ["God", "fate", "instrument", "justice", "will", "destiny", "providence"],
+        "source": "count_of_monte_cristo.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "How does The Count of Monte Cristo explore the limitations of human justice?",
+        "expected_keywords": ["system", "failed", "corruption", "innocent", "guilty", "revenge", "flawed"],
+        "source": "count_of_monte_cristo.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "What is the significance of the phrase wait and hope at the end of The Count of Monte Cristo?",
+        "expected_keywords": ["patience", "faith", "divine", "wisdom", "acceptance", "time", "trust"],
+        "source": "count_of_monte_cristo.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "How does Edmond Dantes's pursuit of revenge affect innocent people in The Count of Monte Cristo?",
+        "expected_keywords": ["children", "families", "collateral", "harm", "unintended", "suffering", "consequences"],
+        "source": "count_of_monte_cristo.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "What role does education and knowledge play in Edmond Dantes's transformation?",
+        "expected_keywords": ["Abbe", "learning", "languages", "wisdom", "power", "preparation", "enlightenment"],
+        "source": "count_of_monte_cristo.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "How does the theme of identity and disguise function in The Count of Monte Cristo?",
+        "expected_keywords": ["masks", "personas", "hidden", "revelation", "transformation", "deception", "true self"],
+        "source": "count_of_monte_cristo.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "What is the relationship between suffering and redemption in The Count of Monte Cristo?",
+        "expected_keywords": ["prison", "transformation", "pain", "growth", "forgiveness", "mercy", "wisdom"],
+        "source": "count_of_monte_cristo.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "How does Dumas portray the concept of friendship and loyalty in The Count of Monte Cristo?",
+        "expected_keywords": ["Morrel", "faithful", "reward", "gratitude", "trust", "devotion", "honor"],
+        "source": "count_of_monte_cristo.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "What role does Mercedes play in Edmond's journey in The Count of Monte Cristo?",
+        "expected_keywords": ["love", "lost", "past", "regret", "recognition", "sacrifice", "memory"],
+        "source": "count_of_monte_cristo.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "How does The Count of Monte Cristo explore the corrupting influence of wealth and power?",
+        "expected_keywords": ["money", "influence", "manipulation", "society", "control", "corruption", "aristocracy"],
+        "source": "count_of_monte_cristo.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "What does the Chateau d'If represent symbolically in The Count of Monte Cristo?",
+        "expected_keywords": ["prison", "isolation", "transformation", "injustice", "darkness", "rebirth", "suffering"],
+        "source": "count_of_monte_cristo.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "How does Dantes's character change from the beginning to the end of The Count of Monte Cristo?",
+        "expected_keywords": ["innocent", "naive", "hardened", "wise", "merciful", "transformed", "humbled"],
+        "source": "count_of_monte_cristo.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "What commentary does The Count of Monte Cristo make about the French aristocracy and social class?",
+        "expected_keywords": ["privilege", "corruption", "appearance", "status", "hypocrisy", "society", "power"],
+        "source": "count_of_monte_cristo.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "How does Joyce use stream of consciousness technique in Ulysses?",
+        "expected_keywords": ["interior", "thoughts", "monologue", "mind", "flow", "consciousness", "narrative"],
+        "source": "ulysses.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "What is the significance of the father-son relationship theme in Ulysses?",
+        "expected_keywords": ["Bloom", "Stephen", "yearning", "symbolic", "family", "connection", "paternity"],
+        "source": "ulysses.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "How does Ulysses explore Irish identity and nationalism?",
+        "expected_keywords": ["colonized", "England", "Dublin", "history", "politics", "Ireland", "independence"],
+        "source": "ulysses.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "What role does Dublin play as a setting in Ulysses?",
+        "expected_keywords": ["city", "geography", "streets", "local", "Irish", "place", "character"],
+        "source": "ulysses.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "How does Joyce portray sexuality and desire in Ulysses?",
+        "expected_keywords": ["Molly", "affair", "body", "physical", "intimacy", "human", "frank"],
+        "source": "ulysses.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "What is the significance of the ordinary day structure in Ulysses?",
+        "expected_keywords": ["single day", "mundane", "epic", "everyday", "Bloomsday", "life", "ordinary"],
+        "source": "ulysses.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "How does Ulysses explore themes of alienation and belonging?",
+        "expected_keywords": ["outsider", "Jewish", "Irish", "isolation", "community", "identity", "exile"],
+        "source": "ulysses.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "What is the relationship between Ulysses and Homer's Odyssey?",
+        "expected_keywords": ["parallel", "modern", "epic", "journey", "hero", "structure", "mythic"],
+        "source": "ulysses.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "How does Joyce use language and wordplay in Ulysses?",
+        "expected_keywords": ["puns", "dialects", "experimental", "style", "linguistic", "innovative", "words"],
+        "source": "ulysses.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "What does Molly Bloom's final monologue reveal about her character in Ulysses?",
+        "expected_keywords": ["thoughts", "desires", "yes", "affirmation", "consciousness", "intimate", "stream"],
+        "source": "ulysses.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "How does Moby Dick explore the relationship between humans and nature?",
+        "expected_keywords": ["struggle", "power", "unknowable", "control", "defeat", "respect", "forces"],
+        "source": "moby_dick.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "What does the white whale symbolize in Moby Dick beyond a physical creature?",
+        "expected_keywords": ["mystery", "nature", "evil", "God", "unknowable", "death", "fate"],
+        "source": "moby_dick.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "How does Melville portray the theme of fate versus free will in Moby Dick?",
+        "expected_keywords": ["destiny", "choice", "predetermined", "doomed", "agency", "inevitable", "control"],
+        "source": "moby_dick.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "What role does the Pequod serve symbolically in Moby Dick?",
+        "expected_keywords": ["society", "microcosm", "diverse", "hierarchy", "doomed", "humanity", "ship"],
+        "source": "moby_dick.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "How does Ishmael function as narrator and character in Moby Dick?",
+        "expected_keywords": ["observer", "survivor", "philosophical", "witness", "storyteller", "questioning", "perspective"],
+        "source": "moby_dick.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "What does Moby Dick suggest about the limits of human knowledge and understanding?",
+        "expected_keywords": ["unknowable", "mystery", "incomplete", "observation", "limits", "cetology", "insufficient"],
+        "source": "moby_dick.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "How does Ahab's monomaniacal pursuit of the whale reflect broader human tendencies?",
+        "expected_keywords": ["obsession", "ambition", "destruction", "pride", "hubris", "single-minded", "fatal"],
+        "source": "moby_dick.txt",
+        "question_type": "comprehension"
+    },
+    {
+        "question": "How does Queequeg's coffin serve as a symbol of life and death in Moby Dick?",
+        "expected_keywords": ["buoy", "life", "death", "resurrection", "survival", "Ishmael", "saving"],
+        "source": "moby_dick.txt",
+        "question_type": "comprehension"
     }
 ]

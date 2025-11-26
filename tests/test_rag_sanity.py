@@ -21,7 +21,7 @@ def test_manual_rag_sanity_check():
     print("--------------")
 
     # Combine all text from results for the check
-    combined_text = " ".join([text for text, _ in results]).lower()
+    combined_text = " ".join([text for text, _, _ in results]).lower()
 
     is_relevant = (
         "pequod" in combined_text

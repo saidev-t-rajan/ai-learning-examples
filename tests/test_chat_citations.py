@@ -32,7 +32,7 @@ def test_system_prompt_contains_citation_instructions_and_model_complies(
     gen = chat_service.get_response("What is the capital of Lemuria?")
 
     # Collect response
-    response = "".join([chunk for chunk in gen if isinstance(chunk, str)])
+    response = "".join([chunk.content for chunk in gen if chunk.content])
 
     # Assert
     # We verify the model found the info and cited it.

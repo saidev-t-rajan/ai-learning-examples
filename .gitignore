@@ -36,3 +36,6 @@ build/
 *.md
 !docs/**/*.md
 
+streamlit_err.log
+streamlit_out.log
+

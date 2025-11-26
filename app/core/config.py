@@ -10,6 +10,9 @@ class Settings(BaseSettings):
         "data/chroma_db", description="Path to ChromaDB persistence directory"
     )
     CORPUS_DIR: str = Field("data/corpus", description="Path to document corpus")
+    CORPUS_LARGE_DIR: str = Field(
+        "data/corpus_large", description="Path to large document corpus"
+    )
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

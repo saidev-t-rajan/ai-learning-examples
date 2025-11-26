@@ -44,12 +44,8 @@ class RAGService:
 
         for filename in files:
             filepath = os.path.join(directory_path, filename)
-            try:
-                chunks = self.ingest(filepath)
-                yield (filename, chunks)
-            except Exception as e:
-                print(f"Failed to ingest {filename}: {e}")
-                yield (filename, 0)
+            chunks = self.ingest(filepath)
+            yield (filename, chunks)
 
     def ingest(self, path: str) -> int:
         """
@@ -78,9 +74,10 @@ class RAGService:
 
         return len(raw_chunks)
 
-    def retrieve(self, query: str) -> list[tuple[str, Metadata]]:
+    def retrieve(self, query: str) -> list[tuple[str, Metadata, float]]:
         """
         Retrieves context relevant to the query.
+        Returns: List[(text, metadata, distance)]
         """
         start_time = time.time()
 

@@ -64,29 +64,39 @@ class ChromaVectorStore:
 
     def _process_search_results(
         self, results: QueryResult
-    ) -> list[tuple[str, Metadata]]:
-        """Extract documents and metadata from Chroma query results."""
-        # Handle Optional types explicitly for type safety
-        docs_list = results.get("documents")
-        if not docs_list or not docs_list[0]:
+    ) -> list[tuple[str, Metadata, float]]:
+        """Extract documents, metadata, and distances from Chroma query results."""
+        docs = (results.get("documents") or [[]])[0]
+        metas = (results.get("metadatas") or [[]])[0]
+        dists = (results.get("distances") or [[]])[0]
+
+        if not docs:
             return []
 
-        docs = docs_list[0]
+        # If metas or dists are None (e.g. not included in query), zip will truncate.
+        # However, similarity_search always includes them.
+        # We rely on Chroma returning parallel lists.
+        # If metas is [None, None] (parallel), it works.
+        # If metas is [] (empty/missing), it implies no docs or mismatch.
 
-        metas_list = results.get("metadatas")
-        metas = metas_list[0] if metas_list and metas_list[0] else []
+        # Fallback: if lists are missing/empty but docs exist, pad them.
+        # This handles cases where Chroma might return None for empty metadata list?
+        if not metas and docs:
+            metas = [None] * len(docs)  # type: ignore
+        if not dists and docs:
+            dists = [0.0] * len(docs)  # type: ignore
 
-        # Chroma may return None for metas if not set
-        if not metas:
-            metas = [{}] * len(docs)  # type: ignore
+        return [
+            (doc, cast(Metadata, dict(meta or {})), dist)
+            for doc, meta, dist in zip(docs, metas, dists)
+        ]
 
-        # Convert Mapping to dict
-        return [(doc, cast(Metadata, dict(meta))) for doc, meta in zip(docs, metas)]
-
-    def similarity_search(self, query: str, k: int = 5) -> list[tuple[str, Metadata]]:
+    def similarity_search(
+        self, query: str, k: int = 5
+    ) -> list[tuple[str, Metadata, float]]:
         """
-        Return top k documents similar to query with their metadata.
-        Returns: List[(text, metadata)]
+        Return top k documents similar to query with their metadata and distance score.
+        Returns: List[(text, metadata, distance)]
         """
         collection = self.client.get_or_create_collection(name=self.collection_name)
         query_vector = embeddings.embed_query(query)
@@ -94,6 +104,7 @@ class ChromaVectorStore:
         results = collection.query(
             query_embeddings=cast(list[Sequence[float]], [query_vector]),
             n_results=k,
+            include=["documents", "metadatas", "distances"],
         )
 
         return self._process_search_results(results)

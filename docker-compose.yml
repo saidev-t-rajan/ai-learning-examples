@@ -1,0 +1,34 @@
+services:
+  ai-cli:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: release
+    image: ai-cli:latest
+    container_name: ai-cli
+    user: "${UID:-1000}:${GID:-1000}"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      - ./.cache:/app/.cache
+    stdin_open: true
+    tty: true
+
+  ai-cli-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: test
+    image: ai-cli:test
+    container_name: ai-cli-test
+    volumes:
+      - ./app:/app/app
+      - ./tests:/app/tests
+      - ./pytest.ini:/app/pytest.ini:ro
+      - ./.cache:/app/.cache
+      - ./data:/app/data
+    env_file:
+      - .env.test
+    profiles:
+      - test

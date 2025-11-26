@@ -57,13 +57,17 @@ def test_get_response_real_api(settings, repo):
     chunks = list(service.get_response("Hello, simply say 'Hello World'"))
 
     # Last chunk should be metrics
-    metrics = chunks[-1]
+    # Filter for chunks that have metrics
+    metrics_chunks = [c for c in chunks if c.metrics]
+    assert len(metrics_chunks) == 1
+    metrics = metrics_chunks[0].metrics
+
     from app.core.models import ChatMetrics
 
     assert isinstance(metrics, ChatMetrics)
 
     # Reconstruct text
-    response = "".join([c for c in chunks if isinstance(c, str)])
+    response = "".join([c.content for c in chunks if c.content])
 
     assert isinstance(response, str)
     assert len(response) > 0
@@ -84,7 +88,7 @@ def test_memory_recall_real_llm(settings, repo):
     # We instantiate a NEW service, but pass the EXISTING repo (simulating persistent DB)
     service2 = ChatService(repo=repo, settings=settings)
     chunks = list(service2.get_response("What is my name?"))
-    response = "".join([c for c in chunks if isinstance(c, str)])
+    response = "".join([c.content for c in chunks if c.content])
 
     # Assert the AI mentions "Alice"
     assert "Alice" in response

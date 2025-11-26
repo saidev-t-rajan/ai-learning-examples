@@ -22,7 +22,7 @@ def test_migration_creates_table(repo):
 
         # Check version
         cur.execute("PRAGMA user_version")
-        assert cur.fetchone()[0] == 1
+        assert cur.fetchone()[0] == 2
 
 
 def test_add_and_get_messages(repo):

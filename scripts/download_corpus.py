@@ -3,11 +3,14 @@ import requests
 import time
 
 # Directory to save files
-DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "corpus")
+DATA_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(__file__)), "data", "corpus_large"
+)
 
 # Public domain books (Project Gutenberg)
 # Using text files as our loader supports them and they are easier to download reliably than PDFs
 BOOKS = {
+    # Original set
     "frankenstein.txt": "https://www.gutenberg.org/cache/epub/84/pg84.txt",
     "pride_and_prejudice.txt": "https://www.gutenberg.org/cache/epub/1342/pg1342.txt",
     "sherlock_holmes.txt": "https://www.gutenberg.org/cache/epub/1661/pg1661.txt",
@@ -15,13 +18,47 @@ BOOKS = {
     "dracula.txt": "https://www.gutenberg.org/cache/epub/345/pg345.txt",
     "ulysses.txt": "https://www.gutenberg.org/cache/epub/4300/pg4300.txt",
     "war_and_peace.txt": "https://www.gutenberg.org/cache/epub/2600/pg2600.txt",
-    # Requested specific PDF files
-    "lotr_fellowship.pdf": "https://www.mrsmuellersworld.com/uploads/1/3/0/5/13054185/lord-of-the-rings-01-the-fellowship-of-the-ring_full_text.pdf",
-    # NOTE: The requested Scribd link ("https://www.scribd.com/document/346643809/Revenge-Of-The-Sith-pdf")
-    # returns an HTML page, not a raw PDF, preventing automated ingestion.
-    # We substitute it with another large public domain text to maintain corpus size.
-    # "star_wars_revenge_sith.pdf": "https://www.scribd.com/document/346643809/Revenge-Of-The-Sith-pdf",
     "count_of_monte_cristo.txt": "https://www.gutenberg.org/cache/epub/1184/pg1184.txt",
+    # Additions for size (>50MB total target)
+    "les_miserables.txt": "https://www.gutenberg.org/cache/epub/135/pg135.txt",
+    "don_quixote.txt": "https://www.gutenberg.org/cache/epub/996/pg996.txt",
+    "brothers_karamazov.txt": "https://www.gutenberg.org/cache/epub/28054/pg28054.txt",
+    "anna_karenina.txt": "https://www.gutenberg.org/cache/epub/1399/pg1399.txt",
+    "david_copperfield.txt": "https://www.gutenberg.org/cache/epub/766/pg766.txt",
+    "bleak_house.txt": "https://www.gutenberg.org/cache/epub/1023/pg1023.txt",
+    "middlemarch.txt": "https://www.gutenberg.org/cache/epub/145/pg145.txt",
+    "three_musketeers.txt": "https://www.gutenberg.org/cache/epub/1257/pg1257.txt",
+    "crime_and_punishment.txt": "https://www.gutenberg.org/cache/epub/2554/pg2554.txt",
+    "great_expectations.txt": "https://www.gutenberg.org/cache/epub/1400/pg1400.txt",
+    "wealth_of_nations.txt": "https://www.gutenberg.org/cache/epub/3300/pg3300.txt",
+    "critique_of_pure_reason.txt": "https://www.gutenberg.org/cache/epub/4280/pg4280.txt",
+    "leviathan.txt": "https://www.gutenberg.org/cache/epub/3207/pg3207.txt",
+    "republic.txt": "https://www.gutenberg.org/cache/epub/1497/pg1497.txt",
+    "odyssey.txt": "https://www.gutenberg.org/cache/epub/1727/pg1727.txt",
+    "iliad.txt": "https://www.gutenberg.org/cache/epub/6130/pg6130.txt",
+    "tom_jones.txt": "https://www.gutenberg.org/cache/epub/6593/pg6593.txt",
+    "vanity_fair.txt": "https://www.gutenberg.org/cache/epub/599/pg599.txt",
+    "woman_in_white.txt": "https://www.gutenberg.org/cache/epub/583/pg583.txt",
+    "clarissa.txt": "https://www.gutenberg.org/cache/epub/5299/pg5299.txt",
+    "tale_of_two_cities.txt": "https://www.gutenberg.org/cache/epub/98/pg98.txt",
+    "grimms_fairy_tales.txt": "https://www.gutenberg.org/cache/epub/2591/pg2591.txt",
+    "leaves_of_grass.txt": "https://www.gutenberg.org/cache/epub/1322/pg1322.txt",
+    "secret_garden.txt": "https://www.gutenberg.org/cache/epub/113/pg113.txt",
+    "peter_pan.txt": "https://www.gutenberg.org/cache/epub/16/pg16.txt",
+    "alice_in_wonderland.txt": "https://www.gutenberg.org/cache/epub/11/pg11.txt",
+    "through_the_looking_glass.txt": "https://www.gutenberg.org/cache/epub/12/pg12.txt",
+    "treasure_island.txt": "https://www.gutenberg.org/cache/epub/120/pg120.txt",
+    "jekyll_and_hyde.txt": "https://www.gutenberg.org/cache/epub/43/pg43.txt",
+    "jungle_book.txt": "https://www.gutenberg.org/cache/epub/236/pg236.txt",
+    "metamorphosis.txt": "https://www.gutenberg.org/cache/epub/5200/pg5200.txt",
+    "dorian_gray.txt": "https://www.gutenberg.org/cache/epub/174/pg174.txt",
+    "huckleberry_finn.txt": "https://www.gutenberg.org/cache/epub/76/pg76.txt",
+    "tom_sawyer.txt": "https://www.gutenberg.org/cache/epub/74/pg74.txt",
+    "prince_and_pauper.txt": "https://www.gutenberg.org/cache/epub/1837/pg1837.txt",
+    "connecticut_yankee.txt": "https://www.gutenberg.org/cache/epub/86/pg86.txt",
+    "life_on_the_mississippi.txt": "https://www.gutenberg.org/cache/epub/245/pg245.txt",
+    "innocents_abroad.txt": "https://www.gutenberg.org/cache/epub/3176/pg3176.txt",
+    "roughing_it.txt": "https://www.gutenberg.org/cache/epub/3177/pg3177.txt",
 }
 
 

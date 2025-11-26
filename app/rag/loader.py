@@ -31,15 +31,12 @@ def _load_txt(file_path: str) -> str:
 
 def _load_pdf(file_path: str) -> str:
     text_content = []
-    try:
-        reader = pypdf.PdfReader(file_path)
-        for page in reader.pages:
-            page_text = page.extract_text()
-            if page_text:
-                text_content.append(page_text)
-        return "\n\n".join(text_content)
-    except Exception as e:
-        raise Exception(f"Failed to read PDF: {e}")
+    reader = pypdf.PdfReader(file_path)
+    for page in reader.pages:
+        page_text = page.extract_text()
+        if page_text:
+            text_content.append(page_text)
+    return "\n\n".join(text_content)
 
 
 def _clean_text(text: str) -> str:
@@ -53,9 +50,7 @@ def _clean_text(text: str) -> str:
     paragraphs = text.split("\n\n")
 
     # 3. Unwrap lines within each paragraph
-    cleaned_paragraphs = []
-    for para in paragraphs:
-        cleaned_paragraphs.append(para.replace("\n", " "))
+    cleaned_paragraphs = [para.replace("\n", " ") for para in paragraphs]
 
     # 4. Rejoin paragraphs
     return "\n\n".join(cleaned_paragraphs)

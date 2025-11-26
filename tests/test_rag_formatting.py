@@ -31,7 +31,7 @@ def test_retrieve_returns_correct_metadata(tmp_path):
     found_nature = False
     found_poetry = False
 
-    for text, meta in results:
+    for text, meta, _ in results:
         if "The sky is blue." in text and meta.get("source") == "nature.pdf":
             found_nature = True
         if "Roses are red." in text and meta.get("source") == "poetry.txt":
