@@ -38,3 +38,23 @@ class TripItinerary(BaseModel):
 class AgentStep(BaseModel):
     step_type: str
     content: str
+
+
+class ExecutionResult(BaseModel):
+    success: bool
+    stdout: str
+    stderr: str
+    exit_code: int
+    execution_time_seconds: float
+
+
+class HealerMetrics(BaseModel):
+    total_attempts: int
+    successful: bool
+    total_execution_time_seconds: float
+    final_exit_code: int
+
+
+class HealerChunk(BaseModel):
+    content: str | None = None
+    metrics: HealerMetrics | None = None

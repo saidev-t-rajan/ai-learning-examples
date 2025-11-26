@@ -31,7 +31,9 @@ class ChatService:
             base_url=self.settings.OPENAI_BASE_URL,
         )
 
-    def get_response(self, message: str) -> Generator[ChatChunk, None, None]:
+    def get_response(
+        self, message: str, system_message: str | None = None
+    ) -> Generator[ChatChunk, None, None]:
         """
         Get a streaming response for the user's message.
         Yields string chunks and finally a ChatMetrics object.
@@ -50,7 +52,7 @@ class ChatService:
             rag_success = retrieval_result.is_success
 
         # 2. Prepare Messages
-        messages = self._prepare_messages(rag_context)
+        messages = self._prepare_messages(rag_context, system_message)
 
         start_time = time.time()
         ttft = 0.0
@@ -115,9 +117,10 @@ class ChatService:
     def _prepare_messages(
         self,
         rag_context: str,
+        system_message: str | None = None,
     ) -> list[ChatCompletionMessageParam]:
         history = self.repo.get_recent_messages(limit=MAX_HISTORY_MESSAGES)
-        system_prompt = DEFAULT_SYSTEM_PROMPT
+        system_prompt = system_message or DEFAULT_SYSTEM_PROMPT
 
         if rag_context:
             system_prompt += rag_context
