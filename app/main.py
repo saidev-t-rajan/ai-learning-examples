@@ -7,6 +7,7 @@ from app.core.chat_service import ChatService
 from app.db.memory import ChatRepository
 from app.rag.service import RAGService
 from app.cli import CLI
+from app.agents.planning import PlanningService
 
 
 def configure_logging(verbose: bool = False) -> None:
@@ -51,8 +52,14 @@ def main() -> None:
     repo = ChatRepository()
     rag_service = RAGService(settings=settings)
     chat_service = ChatService(repo=repo, rag_service=rag_service, settings=settings)
+    planning_service = PlanningService(settings=settings)
 
-    cli = CLI(chat_service=chat_service, rag_service=rag_service, settings=settings)
+    cli = CLI(
+        chat_service=chat_service,
+        rag_service=rag_service,
+        settings=settings,
+        planning_service=planning_service,
+    )
     cli.run()
 
 

@@ -8,7 +8,7 @@ def test_handle_command_ingest_all_default():
     rag_service = Mock()
     settings = Settings()
 
-    cli = CLI(chat_service, rag_service, settings)
+    cli = CLI(chat_service, rag_service, settings, planning_service=None)
 
     with patch("app.cli.ingest_directory_with_report") as mock_ingest:
         cli._handle_command(INGEST_ALL)
@@ -20,7 +20,7 @@ def test_handle_command_ingest_all_large():
     rag_service = Mock()
     settings = Settings()
 
-    cli = CLI(chat_service, rag_service, settings)
+    cli = CLI(chat_service, rag_service, settings, planning_service=None)
 
     with patch("app.cli.ingest_directory_with_report") as mock_ingest:
         cli._handle_command(f"{INGEST_ALL} --large")

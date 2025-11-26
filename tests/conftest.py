@@ -1,6 +1,7 @@
 import pytest
 from app.core.config import Settings
 from app.db.memory import ChatRepository
+from app.agents.planning import PlanningService
 
 
 @pytest.fixture
@@ -11,3 +12,8 @@ def settings():
 @pytest.fixture
 def repo():
     return ChatRepository(db_path=":memory:")
+
+
+@pytest.fixture
+def planning_service(settings):
+    return PlanningService(settings=settings)
