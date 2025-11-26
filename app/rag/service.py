@@ -28,11 +28,16 @@ class RAGService:
         settings: Settings | None = None,
     ):
         self.settings = settings or Settings()
-        # Initialize vector store (which handles persistence and embeddings)
         self.vector_store: ChromaVectorStore = (
-            vector_store
-            if vector_store
-            else ChromaVectorStore(persist_directory=self.settings.CHROMA_DB_DIR)
+            vector_store if vector_store else self._create_vector_store()
+        )
+
+    def _create_vector_store(self) -> ChromaVectorStore:
+        use_http_mode = self.settings.CHROMA_HOST is not None
+        return ChromaVectorStore(
+            persist_directory=None if use_http_mode else self.settings.CHROMA_DB_DIR,
+            host=self.settings.CHROMA_HOST,
+            port=self.settings.CHROMA_PORT,
         )
 
     def retrieve_context(self, query: str) -> RetrievalResult:

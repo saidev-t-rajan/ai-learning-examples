@@ -9,6 +9,12 @@ class Settings(BaseSettings):
     CHROMA_DB_DIR: str = Field(
         "data/chroma_db", description="Path to ChromaDB persistence directory"
     )
+    CHROMA_HOST: str | None = Field(
+        None, description="ChromaDB server host for HTTP client mode"
+    )
+    CHROMA_PORT: int = Field(
+        8000, description="ChromaDB server port for HTTP client mode"
+    )
     CORPUS_DIR: str = Field("data/corpus", description="Path to document corpus")
     CORPUS_LARGE_DIR: str = Field(
         "data/corpus_large", description="Path to large document corpus"

@@ -1,4 +1,15 @@
 services:
+  chromadb:
+    image: ghcr.io/chroma-core/chroma:latest
+    container_name: chromadb
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data/chroma_server:/chroma/chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+      - ANONYMIZED_TELEMETRY=FALSE
+
   ai-cli:
     build:
       context: .
@@ -6,14 +17,20 @@ services:
       target: release
     image: ai-cli:latest
     container_name: ai-cli
-    user: "${UID:-1000}:${GID:-1000}"
     env_file:
       - .env
+    environment:
+      - CHROMA_HOST=chromadb
+      - CHROMA_PORT=8000
     volumes:
       - ./data:/app/data
       - ./.cache:/app/.cache
     stdin_open: true
     tty: true
+    depends_on:
+      - chromadb
+    profiles:
+      - cli
 
   ai-cli-test:
     build:
@@ -30,8 +47,13 @@ services:
       - ./data:/app/data
     env_file:
       - .env.test
+    environment:
+      - CHROMA_HOST=chromadb
+      - CHROMA_PORT=8000
     profiles:
       - test
+    depends_on:
+      - chromadb
 
   ai-web:
     build:
@@ -40,14 +62,20 @@ services:
       target: release
     image: ai-web:latest
     container_name: ai-web
-    user: "${UID:-1000}:${GID:-1000}"
     env_file:
       - .env
+    environment:
+      - CHROMA_HOST=chromadb
+      - CHROMA_PORT=8000
+      - STREAMLIT_SERVER_ENABLE_STATIC_SERVING=true
+      - STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
     ports:
       - "8501:8501"
     volumes:
       - ./data:/app/data
       - ./.cache:/app/.cache
-    command: streamlit run app/web/main.py
+    command: streamlit run app/web/main.py --server.address=0.0.0.0
     stdin_open: true
     tty: true
+    depends_on:
+      - chromadb

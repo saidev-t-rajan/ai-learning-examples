@@ -50,3 +50,5 @@ docker-compose.yml
 # Documentation and scripts
 *.md
 scripts/
+!scripts/docker-entrypoint.sh
+!scripts/docker-entrypoint-test.sh

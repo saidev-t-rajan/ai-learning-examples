@@ -30,30 +30,34 @@ RUN pip install --no-cache-dir -r requirements-dev.txt
 COPY app/ app/
 COPY tests/ tests/
 COPY pytest.ini .
-# Note: .env.test must be mounted as a volume or provided as env vars at runtime
+COPY scripts/docker-entrypoint-test.sh /entrypoint.sh
 
-# Default command runs all tests including integration tests
-# To skip integration tests: docker-compose ... python -m pytest -m "not integration"
+RUN mkdir -p /app/data/test /app/.cache/test && \
+    chmod +x /entrypoint.sh && \
+    chmod -R 777 /app/data /app/.cache
+
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["python", "-m", "pytest"]
 
 # Stage 4: Release
 FROM base as release
 
-# Copy installed packages from builder
 COPY --from=builder /usr/local /usr/local
 
-# Copy application code
 COPY app/ app/
+COPY scripts/docker-entrypoint.sh /entrypoint.sh
 
-# Create non-root user
-RUN groupadd -r appuser && useradd -r -g appuser appuser
+RUN groupadd -r appuser && useradd -r -g appuser -d /home/appuser -m appuser
 
-# Create data and cache directories with correct permissions
-RUN mkdir -p /app/data /app/.cache && chown -R appuser:appuser /app/data /app/.cache
+RUN mkdir -p /app/data /app/.cache /home/appuser/.streamlit && \
+    chown -R appuser:appuser /app /home/appuser && \
+    chmod +x /entrypoint.sh
+
+ENV HOME=/home/appuser
 
 USER appuser
 
 EXPOSE 8501
 
-ENTRYPOINT ["python", "-m"]
-CMD ["app.main"]
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["python", "-m", "app.main"]

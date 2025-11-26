@@ -7,8 +7,11 @@ def test_local_embeddings_and_chroma_integration(tmp_path):
     # 1. Initialize Vector Store (Real Chroma)
     # We use a temporary collection for testing to avoid polluting data
     # Embeddings are initialized inside the store
+    persist_dir = tmp_path / "chroma_test"
+    persist_dir.mkdir()
+
     store = ChromaVectorStore(
-        persist_directory=str(tmp_path / "chroma_test"),
+        persist_directory=str(persist_dir),
         collection_name="test_integration_collection",
     )
 

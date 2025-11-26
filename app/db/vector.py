@@ -9,23 +9,32 @@ from app.types import Metadata
 
 
 class ChromaVectorStore:
-    """ChromaDB-based vector store for document embeddings.
-
-    Note: This implementation converts ChromaDB's immutable metadata Mappings
-    to mutable dicts on retrieval, which may not support all ChromaDB types
-    (e.g. SparseVector).
-    """
-
     client: ClientAPI
     collection_name: str
 
     def __init__(
         self,
-        persist_directory: str,
+        persist_directory: str | None = None,
         collection_name: str = "documents",
+        host: str | None = None,
+        port: int = 8000,
     ) -> None:
-        self.client = chromadb.PersistentClient(path=persist_directory)
+        self.client = self._create_client(persist_directory, host, port)
         self.collection_name = collection_name
+
+    def _create_client(
+        self,
+        persist_directory: str | None,
+        host: str | None,
+        port: int,
+    ) -> ClientAPI:
+        if host:
+            return chromadb.HttpClient(host=host, port=port)
+
+        if not persist_directory:
+            raise ValueError("persist_directory is required when host is not provided")
+
+        return chromadb.PersistentClient(path=persist_directory)
 
     def add_documents(
         self,
