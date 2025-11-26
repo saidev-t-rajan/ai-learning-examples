@@ -1,14 +1,18 @@
 import time
+from typing import TYPE_CHECKING
 
 from app.core.config import Settings
 from app.core.chat_service import ChatService
 from app.rag.service import RAGService
 
+if TYPE_CHECKING:
+    from app.agents.planning import PlanningService
 
 # Command constants
 EXIT = "/exit"
 INGEST = "/ingest"
 INGEST_ALL = "/ingest_all"
+PLAN = "/plan"
 
 SEPARATOR_LINE = "-" * 30
 
@@ -59,10 +63,12 @@ class CLI:
         chat_service: ChatService,
         rag_service: RAGService,
         settings: Settings,
+        planning_service: "PlanningService | None" = None,
     ):
         self.chat_service = chat_service
         self.rag_service = rag_service
         self.settings = settings
+        self.planning_service = planning_service
 
     def run(self) -> None:
         """Start the interactive chat loop."""
@@ -70,6 +76,7 @@ class CLI:
         print(f"Type '{EXIT}' to quit.")
         print(f"Type '{INGEST} <path>' to load a document.")
         print(f"Type '{INGEST_ALL} [--large]' to load all corpus documents.")
+        print(f"Type '{PLAN} <request>' to plan a trip with AI agent.")
 
         while True:
             try:
@@ -102,6 +109,10 @@ class CLI:
             self._handle_ingest(user_input)
             return True
 
+        if user_input.startswith(PLAN + " "):
+            self._handle_plan(user_input)
+            return True
+
         return False
 
     def _handle_exit(self) -> None:
@@ -117,6 +128,29 @@ class CLI:
         path = user_input.split(" ", 1)[1].strip()
         count = self.rag_service.ingest(path)
         print(f"Ingested {count} chunks from {path}")
+
+    def _handle_plan(self, user_input: str) -> None:
+        """Execute planning agent for trip planning requests."""
+        if not self.planning_service:
+            print("Planning service not available")
+            return
+
+        request = user_input[len(PLAN) :].strip()
+        print("Agent: ", flush=True)
+
+        for step in self.planning_service.plan(request):
+            if step.step_type == "thought":
+                print(f"[Thinking] {step.content}", flush=True)
+            elif step.step_type == "tool_call":
+                print(f"[Tool Call] {step.content}", flush=True)
+            elif step.step_type == "tool_result":
+                print(f"[Tool Result] {step.content[:100]}...", flush=True)
+            elif step.step_type == "final_answer":
+                print(f"\n[Final Plan]\n{step.content}", flush=True)
+            elif step.step_type == "metrics":
+                print(f"\n[Stats] {step.content}", flush=True)
+
+        print()
 
     def _process_chat(self, user_input: str) -> None:
         print("AI: ", end="", flush=True)
