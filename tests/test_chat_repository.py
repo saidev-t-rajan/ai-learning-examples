@@ -1,5 +1,5 @@
 import pytest
-from app.db.memory import ChatRepository
+from app.db.chat_repository import ChatRepository
 
 
 @pytest.fixture
@@ -38,12 +38,12 @@ def test_add_and_get_messages(repo):
     messages = repo.get_recent_messages(limit=10)
 
     assert len(messages) == 3
-    assert messages[0]["role"] == "user"
-    assert messages[0]["content"] == "Hello"
-    assert messages[1]["role"] == "assistant"
-    assert messages[1]["content"] == "Hi there"
-    assert messages[2]["role"] == "user"
-    assert messages[2]["content"] == "How are you?"
+    assert messages[0].role == "user"
+    assert messages[0].content == "Hello"
+    assert messages[1].role == "assistant"
+    assert messages[1].content == "Hi there"
+    assert messages[2].role == "user"
+    assert messages[2].content == "How are you?"
 
 
 def test_get_recent_messages_limit(repo):
@@ -58,5 +58,5 @@ def test_get_recent_messages_limit(repo):
 
     assert len(messages) == 2
     # Should be the last two: Message 3 and Message 4
-    assert messages[0]["content"] == "Message 3"
-    assert messages[1]["content"] == "Message 4"
+    assert messages[0].content == "Message 3"
+    assert messages[1].content == "Message 4"

@@ -4,7 +4,7 @@ import argparse
 from pathlib import Path
 from app.core.config import Settings
 from app.core.chat_service import ChatService
-from app.db.memory import ChatRepository
+from app.db.chat_repository import ChatRepository
 from app.rag.service import RAGService
 from app.cli import CLI
 from app.agents.planning import PlanningService
@@ -12,20 +12,14 @@ from app.agents.healer import HealerService
 
 
 def configure_logging(verbose: bool = False) -> None:
-    """
-    Configure logging to file and stderr.
-    File: data/app.log (DEBUG)
-    Stderr: INFO if verbose else WARNING
-    """
+    """Configure dual logging: DEBUG to data/app.log, INFO/WARNING to stderr."""
     log_dir = Path("data")
     log_dir.mkdir(exist_ok=True)
     log_file = log_dir / "app.log"
 
-    # Root logger
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
 
-    # File Handler
     file_handler = logging.FileHandler(log_file)
     file_handler.setLevel(logging.DEBUG)
     file_formatter = logging.Formatter(
@@ -34,7 +28,6 @@ def configure_logging(verbose: bool = False) -> None:
     file_handler.setFormatter(file_formatter)
     logger.addHandler(file_handler)
 
-    # Console Handler (Stderr)
     console_handler = logging.StreamHandler(sys.stderr)
     console_handler.setLevel(logging.INFO if verbose else logging.WARNING)
     console_formatter = logging.Formatter("%(levelname)s: %(message)s")

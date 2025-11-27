@@ -8,7 +8,7 @@ from openai import OpenAI
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletionToolParam
 
 from app.core.config import Settings
-from app.core.utils import calculate_cost
+from app.core.utils import calculate_cost, extract_json_from_text
 from app.agents.tools import ALL_TOOLS, TOOL_EXECUTORS
 from app.agents.models import AgentStep, TripItinerary
 
@@ -37,106 +37,89 @@ class PlanningService:
             base_url=self.settings.OPENAI_BASE_URL,
         )
 
-    def plan(self, user_request: str) -> Generator[AgentStep, None, None]:
-        """
-        Execute ReAct loop: Reasoning → Action → Observation.
-        Yields AgentStep objects showing agent thought process.
-        """
-        max_budget = extract_budget_constraint(user_request)
-
-        messages: list[ChatCompletionMessageParam] = [
+    def _build_initial_messages(
+        self, user_request: str
+    ) -> list[ChatCompletionMessageParam]:
+        """Build initial conversation messages."""
+        return [
             {"role": "system", "content": PLANNING_SYSTEM_PROMPT},
             {"role": "user", "content": user_request},
         ]
 
-        max_iterations = 10
-        iteration = 0
-        start_time = time.time()
-        total_input_tokens = 0
-        total_output_tokens = 0
+    def _call_llm(self, messages: list[ChatCompletionMessageParam]) -> Any:
+        """Call LLM with current messages and tool definitions."""
+        return self.client.chat.completions.create(
+            model=self.settings.MODEL_NAME,
+            messages=messages,
+            tools=cast(Iterable[ChatCompletionToolParam], ALL_TOOLS),
+            tool_choice="auto",
+        )
 
-        while iteration < max_iterations:
-            iteration += 1
+    def _update_token_metrics(self, response: Any, tracker: dict[str, int]) -> None:
+        """Update token usage metrics from response."""
+        if response.usage:
+            tracker["input_tokens"] += response.usage.prompt_tokens
+            tracker["output_tokens"] += response.usage.completion_tokens
 
-            response = self.client.chat.completions.create(
-                model=self.settings.MODEL_NAME,
-                messages=messages,
-                tools=cast(Iterable[ChatCompletionToolParam], ALL_TOOLS),
-                tool_choice="auto",
-            )
+    def _execute_tool(
+        self, tool_call: Any
+    ) -> Generator[tuple[AgentStep, ChatCompletionMessageParam | None], None, None]:
+        """Execute a single tool call and yield steps and message."""
+        function_name = tool_call.function.name
+        function_args_json = tool_call.function.arguments
 
-            if response.usage:
-                total_input_tokens += response.usage.prompt_tokens
-                total_output_tokens += response.usage.completion_tokens
+        yield (
+            AgentStep(
+                step_type="tool_call", content=f"{function_name}({function_args_json})"
+            ),
+            None,
+        )
 
-            assistant_message = response.choices[0].message
+        function_args = json.loads(function_args_json)
+        executor = TOOL_EXECUTORS.get(function_name)
 
-            if assistant_message.content:
-                yield AgentStep(step_type="thought", content=assistant_message.content)
+        if executor:
+            safe_executor = cast(Callable[..., str], executor)
+            tool_result = safe_executor(**function_args)
+        else:
+            tool_result = json.dumps({"error": f"Unknown tool: {function_name}"})
 
-            if not assistant_message.tool_calls:
-                final_content = assistant_message.content or ""
+        yield AgentStep(step_type="tool_result", content=tool_result), None
 
-                itinerary_dict = extract_json_from_response(final_content)
-                if itinerary_dict and max_budget:
-                    is_valid, message = validate_itinerary(itinerary_dict, max_budget)
-                    if not is_valid:
-                        yield AgentStep(
-                            step_type="validation_error",
-                            content=f"Constraint violation: {message}",
-                        )
+        # Return message to append
+        message: ChatCompletionMessageParam = {
+            "role": "tool",
+            "tool_call_id": tool_call.id,
+            "content": tool_result,
+        }
+        yield AgentStep(step_type="tool_result", content=""), message
 
-                yield AgentStep(step_type="final_answer", content=final_content)
-                break
+    def _validate_and_yield_final_answer(
+        self, content: str, max_budget: float | None
+    ) -> Generator[AgentStep, None, None]:
+        """Validate itinerary and yield final answer or validation error."""
+        itinerary_dict = extract_json_from_text(content)
 
-            messages.append(
-                {
-                    "role": "assistant",
-                    "content": assistant_message.content,
-                    "tool_calls": cast(Any, assistant_message.tool_calls),
-                }
-            )
-
-            for tool_call in assistant_message.tool_calls:
-                if tool_call.type != "function":
-                    continue
-
-                function_name = tool_call.function.name
-                function_args_json = tool_call.function.arguments
-
+        if itinerary_dict and max_budget:
+            is_valid, message = validate_itinerary(itinerary_dict, max_budget)
+            if not is_valid:
                 yield AgentStep(
-                    step_type="tool_call",
-                    content=f"{function_name}({function_args_json})",
+                    step_type="validation_error",
+                    content=f"Constraint violation: {message}",
                 )
 
-                function_args = json.loads(function_args_json)
-                executor = TOOL_EXECUTORS.get(function_name)
+        yield AgentStep(step_type="final_answer", content=content)
 
-                if executor:
-                    # Cast to Callable to satisfy Mypy
-                    safe_executor = cast(Callable[..., str], executor)
-                    tool_result = safe_executor(**function_args)
-                else:
-                    tool_result = json.dumps(
-                        {"error": f"Unknown tool: {function_name}"}
-                    )
-
-                yield AgentStep(step_type="tool_result", content=tool_result)
-
-                messages.append(
-                    {
-                        "role": "tool",
-                        "tool_call_id": tool_call.id,
-                        "content": tool_result,
-                    }
-                )
-
+    def _generate_metrics(
+        self, start_time: float, total_input_tokens: int, total_output_tokens: int
+    ) -> AgentStep:
+        """Generate final metrics step."""
         end_time = time.time()
         cost = calculate_cost(
             self.settings.MODEL_NAME, total_input_tokens, total_output_tokens
         )
 
-        yield AgentStep(
+        return AgentStep(
             step_type="metrics",
             content=(
                 f"prompt={total_input_tokens} "
@@ -146,9 +129,60 @@ class PlanningService:
             ),
         )
 
+    def plan(self, user_request: str) -> Generator[AgentStep, None, None]:
+        """Execute ReAct loop with tool calling until final itinerary or max iterations."""
+        max_budget = extract_budget_constraint(user_request)
+        messages = self._build_initial_messages(user_request)
+
+        metrics_tracker = {"input_tokens": 0, "output_tokens": 0}
+        start_time = time.time()
+        max_iterations = 10
+
+        for iteration in range(1, max_iterations + 1):
+            response = self._call_llm(messages)
+            self._update_token_metrics(response, metrics_tracker)
+
+            assistant_message = response.choices[0].message
+
+            if assistant_message.content:
+                yield AgentStep(step_type="thought", content=assistant_message.content)
+
+            if not assistant_message.tool_calls:
+                # No more tools - yield final answer
+                yield from self._validate_and_yield_final_answer(
+                    assistant_message.content or "", max_budget
+                )
+                break
+
+            # Add assistant message with tool calls
+            messages.append(
+                {
+                    "role": "assistant",
+                    "content": assistant_message.content,
+                    "tool_calls": cast(Any, assistant_message.tool_calls),
+                }
+            )
+
+            # Execute all tool calls
+            for tool_call in assistant_message.tool_calls:
+                if tool_call.type != "function":
+                    continue
+
+                for step, message in self._execute_tool(tool_call):
+                    if step.content:  # Don't yield empty steps
+                        yield step
+                    if message:
+                        messages.append(message)
+
+        # Generate final metrics
+        yield self._generate_metrics(
+            start_time,
+            metrics_tracker["input_tokens"],
+            metrics_tracker["output_tokens"],
+        )
+
 
 def extract_budget_constraint(user_request: str) -> float | None:
-    """Extract budget from natural language patterns."""
     patterns = [
         r"under\s+(?:NZ)?\$?([\d,]+)",
         r"for\s+(?:NZ)?\$?([\d,]+)",
@@ -164,31 +198,9 @@ def extract_budget_constraint(user_request: str) -> float | None:
     return None
 
 
-def extract_json_from_response(text: str) -> dict[str, Any] | None:
-    """Extract JSON object from markdown code blocks or plain text."""
-    json_block_pattern = r"```(?:json)?\s*(\{.*?\})\s*```"
-    match = re.search(json_block_pattern, text, re.DOTALL)
-
-    if match:
-        json_str = match.group(1)
-    else:
-        json_obj_pattern = r"\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}"
-        match = re.search(json_obj_pattern, text, re.DOTALL)
-        if match:
-            json_str = match.group(0)
-        else:
-            return None
-
-    try:
-        return cast(dict[str, Any], json.loads(json_str))
-    except json.JSONDecodeError:
-        return None
-
-
 def validate_itinerary(
     itinerary_dict: dict[str, Any], max_budget: float | None
 ) -> tuple[bool, str]:
-    """Validate itinerary against constraints."""
     try:
         itinerary = TripItinerary(**itinerary_dict)
     except Exception as e:

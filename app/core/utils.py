@@ -1,5 +1,8 @@
+import re
+import json
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any, cast
 
 
 @dataclass
@@ -17,33 +20,22 @@ MODEL_PRICING = {
 
 
 def calculate_cost(model_name: str, input_tokens: int, output_tokens: int) -> float:
-    """
-    Calculate the cost of a request based on the model and token usage.
-    Rates are per 1,000,000 tokens.
-    """
     model_lower = model_name.lower()
 
-    # Order matters: check more specific patterns first
-    check_order = [
+    # Match patterns to model keys
+    for pattern, key in [
         ("gpt-4o-mini", "gpt-4o-mini"),
         ("gpt-4o", "gpt-4o"),
         ("gpt4o", "gpt-4o"),
         ("gpt-3.5", "gpt-3.5-turbo"),
-    ]
-
-    pricing = None
-    for substring, key in check_order:
-        if substring in model_lower:
+    ]:
+        if pattern in model_lower:
             pricing = MODEL_PRICING[key]
-            break
+            return (input_tokens / 1_000_000) * pricing.input_rate + (
+                output_tokens / 1_000_000
+            ) * pricing.output_rate
 
-    if not pricing:
-        return 0.0
-
-    input_cost = (input_tokens / 1_000_000) * pricing.input_rate
-    output_cost = (output_tokens / 1_000_000) * pricing.output_rate
-
-    return input_cost + output_cost
+    return 0.0
 
 
 class ValidationError(Exception):
@@ -87,3 +79,24 @@ def validate_directory_path(path_str: str) -> Path:
         raise ValidationError(f"Path is not a directory: {path_str}")
 
     return path
+
+
+def extract_json_from_text(text: str) -> dict[str, Any] | None:
+    """Extract first JSON object from text, checking markdown blocks first."""
+    markdown_pattern = r"```(?:json)?\s*(\{.*?\})\s*```"
+    match = re.search(markdown_pattern, text, re.DOTALL)
+
+    if match:
+        json_str = match.group(1)
+    else:
+        brace_pattern = r"\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}"
+        match = re.search(brace_pattern, text, re.DOTALL)
+        if not match:
+            return None
+        json_str = match.group(0)
+
+    try:
+        parsed = json.loads(json_str)
+        return cast(dict[str, Any], parsed) if isinstance(parsed, dict) else None
+    except json.JSONDecodeError:
+        return None

@@ -27,10 +27,10 @@ def test_conversation_memory_real(settings, repo):
     history = repo.get_recent_messages(limit=10)
     # Expect: User("Hi") + Assistant(Response)
     assert len(history) == 2
-    assert history[0]["role"] == "user"
-    assert history[0]["content"] == "Hi"
-    assert history[1]["role"] == "assistant"
-    assert len(history[1]["content"]) > 0
+    assert history[0].role == "user"
+    assert history[0].content == "Hi"
+    assert history[1].role == "assistant"
+    assert len(history[1].content) > 0
 
     # 3. Send another message to verify context
     # We can't easily prove the model "remembered" without a complex prompt,
@@ -40,8 +40,8 @@ def test_conversation_memory_real(settings, repo):
     history_new = repo.get_recent_messages(limit=10)
     # Expect: User("Hi") + Assistant(Response1) + User("Bye") + Assistant(Response2)
     assert len(history_new) == 4
-    assert history_new[2]["role"] == "user"
-    assert history_new[2]["content"] == "Bye"
+    assert history_new[2].role == "user"
+    assert history_new[2].content == "Bye"
 
 
 @pytest.mark.integration

@@ -1,14 +1,12 @@
 import time
-from typing import TYPE_CHECKING
 
 from app.core.config import Settings
 from app.core.chat_service import ChatService
 from app.rag.service import RAGService
 from app.agents.models import HealerMetrics
-
-if TYPE_CHECKING:
-    from app.agents.planning import PlanningService
-    from app.agents.healer import HealerService
+from app.agents.planning import PlanningService
+from app.agents.healer import HealerService
+from app.core.models import ChatMetrics
 
 # Command constants
 EXIT = "/exit"
@@ -21,10 +19,6 @@ SEPARATOR_LINE = "-" * 30
 
 
 def ingest_directory_with_report(rag_service: RAGService, directory_path: str) -> None:
-    """
-    Ingests all documents from a directory using the RAGService
-    and prints progress report to stdout.
-    """
     print(f"Ingesting documents from {directory_path}...")
     start_time = time.time()
 
@@ -37,7 +31,6 @@ def ingest_directory_with_report(rag_service: RAGService, directory_path: str) -
                 print(f"[{i}] {filename}: {chunks} chunks", flush=True)
                 total_chunks += chunks
             else:
-                # Errors are already printed by the service, so we just mark it here
                 print(f"[{i}] {filename}: Failed or Empty", flush=True)
 
     except ValueError as e:
@@ -66,8 +59,8 @@ class CLI:
         chat_service: ChatService,
         rag_service: RAGService,
         settings: Settings,
-        planning_service: "PlanningService | None" = None,
-        healer_service: "HealerService | None" = None,
+        planning_service: PlanningService | None = None,
+        healer_service: HealerService | None = None,
     ):
         self.chat_service = chat_service
         self.rag_service = rag_service
@@ -76,7 +69,6 @@ class CLI:
         self.healer_service = healer_service
 
     def run(self) -> None:
-        """Start the interactive chat loop."""
         print("--- Datacom AI Assessment ---")
         print(f"Type '{EXIT}' to quit.")
         print(f"Type '{INGEST} <path>' to load a document.")
@@ -145,7 +137,6 @@ class CLI:
         print(f"Ingested {count} chunks from {path}")
 
     def _handle_plan(self, user_input: str) -> None:
-        """Execute planning agent for trip planning requests."""
         if not self.planning_service:
             print("Planning service not available")
             return
@@ -192,6 +183,18 @@ class CLI:
             if chunk.content:
                 print(chunk.content, end="", flush=True)
             if chunk.metrics:
-                print(chunk.metrics.format_stats())
+                print(format_chat_metrics(chunk.metrics))
 
         print()  # Newline at end
+
+
+def format_chat_metrics(metrics: ChatMetrics) -> str:
+    """Format metrics for CLI display."""
+    return (
+        f"\n\n[Stats] "
+        f"Prompt: {metrics.input_tokens} | "
+        f"Completion: {metrics.output_tokens} | "
+        f"TTFT: {metrics.ttft:.2f}s | "
+        f"Latency: {metrics.total_latency:.2f}s | "
+        f"Cost: ${metrics.cost:.6f}"
+    )

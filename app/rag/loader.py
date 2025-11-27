@@ -4,14 +4,10 @@ from app.core.utils import validate_file_path
 
 
 def load_document(file_path: str) -> str:
-    """
-    Loads a file (PDF or TXT) and extracts all text content.
-    Cleans the text by replacing single newlines with spaces (unwrapping).
-    """
+    """Load .txt/.pdf file and clean text (unwrap single newlines, preserve paragraphs)."""
     valid_path = validate_file_path(file_path, allowed_extensions=[".txt", ".pdf"])
 
     text = ""
-    # validate_file_path ensures the suffix is correct, but we check again for dispatch
     if valid_path.suffix.lower() == ".txt":
         text = _load_txt(str(valid_path))
 
@@ -37,9 +33,6 @@ def _load_pdf(file_path: str) -> str:
 
 
 def _clean_text(text: str) -> str:
-    """
-    Replaces single newlines with spaces, but keeps paragraph breaks (double newlines).
-    """
     text = re.sub(r"\n{3,}", "\n\n", text)
     paragraphs = text.split("\n\n")
     cleaned_paragraphs = [para.replace("\n", " ") for para in paragraphs]

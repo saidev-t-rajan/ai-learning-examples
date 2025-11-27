@@ -68,6 +68,3 @@ class CodeExecutor:
             files=[{"path": "test_solution.py", "content": code}],
             command="python -m pytest test_solution.py -v",
         )
-
-    def execute_rust(self, code: str) -> ExecutionResult:
-        raise NotImplementedError("Rust execution not yet implemented")

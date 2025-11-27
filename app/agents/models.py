@@ -58,3 +58,9 @@ class HealerMetrics(BaseModel):
 class HealerChunk(BaseModel):
     content: str | None = None
     metrics: HealerMetrics | None = None
+
+
+class HealerExecutionStep(BaseModel):
+    chunk: HealerChunk | None = None
+    is_success: bool = False
+    execution_time: float = 0.0

@@ -110,7 +110,6 @@ MOCK_WEATHER = {
 def execute_get_flight_prices(
     destination: str, origin: str = "Wellington", max_price: float | None = None
 ) -> str:
-    """Execute flight price lookup tool. Returns JSON string."""
     flights = MOCK_FLIGHTS.get(destination, [])
 
     if max_price:
@@ -121,7 +120,6 @@ def execute_get_flight_prices(
 
 
 def execute_get_weather_forecast(city: str, days: int = 2) -> str:
-    """Execute weather forecast lookup tool. Returns JSON string."""
     forecast = MOCK_WEATHER.get(city, [])[:days]
     result = WeatherResult(city=city, forecast=forecast)
     return result.model_dump_json()

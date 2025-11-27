@@ -1,0 +1,10 @@
+The previous plan failed with this error:
+
+{error_message}
+
+The plan that failed:
+```json
+{previous_plan}
+```
+
+Fix the code or command to make all tests pass. Return the corrected JSON object.

@@ -1,6 +1,6 @@
 import pytest
 import os
-from app.db.memory import ChatRepository
+from app.db.chat_repository import ChatRepository
 from app.db.vector import ChromaVectorStore
 from app.rag.service import RAGService
 from app.core.models import ChatMetrics
@@ -44,16 +44,18 @@ def test_repo_schema_v2_metrics(clean_db):
     # Retrieve stats
     metrics = repo.get_assistant_metrics(limit=1)
     assert len(metrics) == 1
-    row = metrics[0]
+    entry = metrics[0]
+    m = entry.metrics
 
-    assert row["input_tokens"] == 10
-    assert row["output_tokens"] == 20
-    assert abs(row["cost"] - 0.005) < 0.0001
-    assert abs(row["total_latency"] - 1.5) < 0.0001
-    assert abs(row["ttft"] - 0.5) < 0.0001
-    assert abs(row["avg_retrieval_distance"] - 0.8) < 0.0001
-    assert row["rag_success"] == 1
-    assert row["response_status"] == "success"
+    assert m.input_tokens == 10
+    assert m.output_tokens == 20
+    assert abs(m.cost - 0.005) < 0.0001
+    assert abs(m.total_latency - 1.5) < 0.0001
+    assert abs(m.ttft - 0.5) < 0.0001
+    assert m.avg_retrieval_distance is not None
+    assert abs(m.avg_retrieval_distance - 0.8) < 0.0001
+    assert m.rag_success is True
+    assert m.response_status == "success"
 
 
 def test_repo_success_breakdown(clean_db):

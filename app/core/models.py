@@ -1,5 +1,12 @@
+from enum import IntEnum
 from pydantic import BaseModel
 from dataclasses import dataclass
+
+
+class Feedback(IntEnum):
+    DOWN = -1
+    NEUTRAL = 0
+    UP = 1
 
 
 @dataclass(frozen=True)
@@ -20,16 +27,17 @@ class ChatMetrics(BaseModel):
     rag_success: bool = False
     response_status: str = "success"
 
-    def format_stats(self) -> str:
-        """Format metrics for CLI display."""
-        return (
-            f"\n\n[Stats] "
-            f"Prompt: {self.input_tokens} | "
-            f"Completion: {self.output_tokens} | "
-            f"TTFT: {self.ttft:.2f}s | "
-            f"Latency: {self.total_latency:.2f}s | "
-            f"Cost: ${self.cost:.6f}"
-        )
+
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+    timestamp: str | None = None
+
+
+class ChatLogEntry(BaseModel):
+    timestamp: str
+    metrics: ChatMetrics
+    feedback: int | None = None
 
 
 class ChatChunk(BaseModel):

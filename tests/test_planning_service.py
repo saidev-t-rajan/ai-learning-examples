@@ -2,10 +2,10 @@ import pytest
 
 from app.agents.planning import (
     extract_budget_constraint,
-    extract_json_from_response,
     validate_itinerary,
 )
 from app.agents.models import TripItinerary
+from app.core.utils import extract_json_from_text
 
 
 def test_extract_budget_constraint_from_natural_language():
@@ -19,14 +19,14 @@ def test_extract_budget_constraint_from_natural_language():
 def test_extract_json_from_markdown_code_block():
     """Verify JSON extraction from markdown code blocks."""
     text = '```json\n{"key": "value"}\n```'
-    result = extract_json_from_response(text)
+    result = extract_json_from_text(text)
     assert result == {"key": "value"}
 
 
 def test_extract_json_from_plain_text():
     """Verify JSON extraction from plain text."""
     text = 'Here is the plan: {"destination": "Auckland"}'
-    result = extract_json_from_response(text)
+    result = extract_json_from_text(text)
     assert result == {"destination": "Auckland"}
 
 

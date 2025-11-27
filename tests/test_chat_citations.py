@@ -1,6 +1,6 @@
 import pytest
 from app.core.chat_service import ChatService
-from app.db.memory import ChatRepository
+from app.db.chat_repository import ChatRepository
 from app.rag.service import RAGService
 from app.db.vector import ChromaVectorStore
 

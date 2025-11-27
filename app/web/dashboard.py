@@ -2,13 +2,20 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px  # type: ignore
 import plotly.graph_objects as go  # type: ignore
-from app.db.memory import ChatRepository
+from app.db.chat_repository import ChatRepository
 
 
 @st.cache_data(ttl=60)
 def _load_metrics(limit: int) -> list[dict]:
     repo = ChatRepository()
-    return repo.get_assistant_metrics(limit=limit)
+    entries = repo.get_assistant_metrics(limit=limit)
+    data = []
+    for entry in entries:
+        item = entry.metrics.model_dump()
+        item["timestamp"] = entry.timestamp
+        item["feedback"] = entry.feedback
+        data.append(item)
+    return data
 
 
 @st.cache_data(ttl=60)
@@ -17,21 +24,8 @@ def _load_breakdown() -> dict[str, int]:
     return repo.get_success_breakdown()
 
 
-def render() -> None:
-    st.title("Metrics Dashboard")
-
-    # Load Data
-    metrics = _load_metrics(limit=500)
-    breakdown = _load_breakdown()
-
-    if not metrics:
-        st.info("No data yet. Use the CLI to chat: `python -m app.main`")
-        return
-
-    df = pd.DataFrame(metrics)
-    df["timestamp"] = pd.to_datetime(df["timestamp"])
-
-    # --- KPI Row ---
+def _render_summary_metrics(df: pd.DataFrame) -> None:
+    """Display top-level metric cards."""
     col1, col2, col3, col4 = st.columns(4)
     with col1:
         st.metric("Total Requests", len(df))
@@ -40,15 +34,15 @@ def render() -> None:
     with col3:
         st.metric("Total Cost", f"${df['cost'].sum():.4f}")
     with col4:
-        # Handle case where avg_retrieval_distance might be all None
         avg_dist = df["avg_retrieval_distance"].mean()
         val_str = f"{avg_dist:.2f}" if pd.notna(avg_dist) else "N/A"
         st.metric("Avg Retrieval Dist", val_str)
 
-    # --- Chart 1: Latency & Cost Over Time ---
+
+def _render_latency_cost_chart(df: pd.DataFrame) -> None:
+    """Display latency and cost over time chart."""
     st.subheader("Latency & Cost Over Time")
 
-    # Dual axis chart
     fig_lc = go.Figure()
     fig_lc.add_trace(
         go.Scatter(
@@ -77,10 +71,11 @@ def render() -> None:
     )
     st.plotly_chart(fig_lc, use_container_width=True)
 
-    # --- Chart 2: Retrieval Accuracy (Distance) ---
+
+def _render_retrieval_accuracy_chart(df: pd.DataFrame) -> None:
+    """Display retrieval distance scatter plot."""
     st.subheader("Retrieval Accuracy (Distance)")
 
-    # Filter out NaN for distance chart if needed, or Plotly handles it
     fig_dist = px.scatter(
         df,
         x="timestamp",
@@ -89,11 +84,12 @@ def render() -> None:
         title="Vector Distance (Lower is Better)",
         labels={"avg_retrieval_distance": "Distance Score", "rag_success": "Success?"},
     )
-    # Add threshold line
     fig_dist.add_hline(y=1.0, line_dash="dash", annotation_text="Threshold (1.0)")
     st.plotly_chart(fig_dist, use_container_width=True)
 
-    # --- Chart 3: Success Breakdown ---
+
+def _render_success_breakdown_chart(breakdown: dict[str, int]) -> None:
+    """Display success/failure pie chart."""
     st.subheader("Success/Failure Breakdown")
 
     labels = list(breakdown.keys())
@@ -111,3 +107,23 @@ def render() -> None:
         },
     )
     st.plotly_chart(fig_pie, use_container_width=True)
+
+
+def render() -> None:
+    """Main dashboard render function."""
+    st.title("Metrics Dashboard")
+
+    metrics = _load_metrics(limit=500)
+    breakdown = _load_breakdown()
+
+    if not metrics:
+        st.info("No data yet. Use the CLI to chat: `python -m app.main`")
+        return
+
+    df = pd.DataFrame(metrics)
+    df["timestamp"] = pd.to_datetime(df["timestamp"])
+
+    _render_summary_metrics(df)
+    _render_latency_cost_chart(df)
+    _render_retrieval_accuracy_chart(df)
+    _render_success_breakdown_chart(breakdown)

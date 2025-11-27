@@ -13,6 +13,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+DEFAULT_CHUNK_SIZE = 1500
+DEFAULT_CHUNK_OVERLAP = 300
 RAG_CONTEXT_TEMPLATE = (
     "\n\nUse the following context to answer the question.\n"
     "Answer using ONLY the following context. Cite sources using the format [1], [2], etc.\n\n"
@@ -41,19 +43,13 @@ class RAGService:
         )
 
     def retrieve_context(self, query: str) -> RetrievalResult:
-        """
-        Retrieve relevant context for the query, format it for the LLM,
-        and calculate success metrics.
-        """
-        # 1. Retrieve raw results
+        """Retrieve documents, format for LLM with citations, return success metrics."""
         results = self.retrieve(query)
 
-        # 2. Calculate Metrics
         distances = [score for _, _, score in results]
         avg_distance = sum(distances) / len(distances) if distances else None
         rag_success = avg_distance is not None and avg_distance < RAG_DISTANCE_THRESHOLD
 
-        # 3. Format Context
         formatted_context = ""
         if results:
             formatted_chunks = "\n\n".join(
@@ -71,10 +67,7 @@ class RAGService:
     def ingest_directory(
         self, directory_path: str
     ) -> Generator[tuple[str, int], None, None]:
-        """
-        Ingests all supported documents from a directory.
-        Yields tuples of (filename, chunk_count).
-        """
+        """Ingest all .txt/.pdf files from directory. Yields (filename, chunk_count) per file."""
         valid_dir = validate_directory_path(directory_path)
 
         files = sorted(
@@ -91,21 +84,15 @@ class RAGService:
             yield (filename, chunks)
 
     def ingest(self, path: str) -> int:
-        """
-        Ingests a document from the given path.
-        Returns the number of chunks stored.
-        """
         text = load_document(path)
 
-        raw_chunks = split_text(text, chunk_size=1500, chunk_overlap=300)
+        raw_chunks = split_text(
+            text, chunk_size=DEFAULT_CHUNK_SIZE, chunk_overlap=DEFAULT_CHUNK_OVERLAP
+        )
 
         if not raw_chunks:
             return 0
 
-        # Store chunks without prefix to maximize embedding quality
-        # Source information is preserved in metadata
-        # We type hint as list[ChromaMetadata] to satisfy the VectorStore protocol.
-        # Dicts satisfy the Mapping requirement of Metadata.
         metadatas: list[ChromaMetadata] = [
             cast(ChromaMetadata, {"source": path})
         ] * len(raw_chunks)
@@ -118,14 +105,8 @@ class RAGService:
         return len(raw_chunks)
 
     def retrieve(self, query: str) -> list[tuple[str, Metadata, float]]:
-        """
-        Retrieves context relevant to the query.
-        Returns: List[(text, metadata, distance)]
-        """
         start_time = time.time()
 
-        # 4. Search
-        # We retrieve top 10 results for now
         results = self.vector_store.similarity_search(query=query, k=10)
 
         duration = time.time() - start_time

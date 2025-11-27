@@ -41,12 +41,6 @@ class ChromaVectorStore:
         texts: list[str],
         metadatas: Sequence[ChromaMetadata] | None = None,
     ) -> None:
-        """
-        Add documents to the store.
-        Args:
-            texts: List of string content.
-            metadatas: Optional list of metadata mappings.
-        """
         collection = self.client.get_or_create_collection(name=self.collection_name)
         doc_embeddings = embeddings.embed_documents(texts)
 
@@ -74,7 +68,6 @@ class ChromaVectorStore:
     def _process_search_results(
         self, results: QueryResult
     ) -> list[tuple[str, Metadata, float]]:
-        """Extract documents, metadata, and distances from Chroma query results."""
         docs = (results.get("documents") or [[]])[0]
         metas = (results.get("metadatas") or [[]])[0]
         dists = (results.get("distances") or [[]])[0]
@@ -90,10 +83,6 @@ class ChromaVectorStore:
     def similarity_search(
         self, query: str, k: int = 5
     ) -> list[tuple[str, Metadata, float]]:
-        """
-        Return top k documents similar to query with their metadata and distance score.
-        Returns: List[(text, metadata, distance)]
-        """
         collection = self.client.get_or_create_collection(name=self.collection_name)
         query_vector = embeddings.embed_query(query)
 

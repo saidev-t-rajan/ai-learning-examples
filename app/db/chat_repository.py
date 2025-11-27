@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from contextlib import contextmanager
 from collections.abc import Generator
 from app.types import Metadata
-from app.core.models import ChatMetrics
+from app.core.models import ChatMetrics, Feedback, ChatMessage, ChatLogEntry
 
 
 class ChatRepository:
@@ -55,9 +55,6 @@ class ChatRepository:
                 conn.commit()
 
     def _migrate_v1(self, cur: sqlite3.Cursor) -> None:
-        """
-        Version 1: Initialize the chat_history table.
-        """
         cur.execute("""
             CREATE TABLE IF NOT EXISTS chat_history (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -68,10 +65,12 @@ class ChatRepository:
             )
         """)
 
+    def _get_existing_columns(self, cur: sqlite3.Cursor, table_name: str) -> set[str]:
+        """Fetch existing column names from table."""
+        cur.execute(f"PRAGMA table_info({table_name})")
+        return {row[1] for row in cur.fetchall()}
+
     def _migrate_v2(self, cur: sqlite3.Cursor) -> None:
-        """
-        Version 2: Add metrics columns for dashboard.
-        """
         columns = [
             ("input_tokens", "INTEGER"),
             ("output_tokens", "INTEGER"),
@@ -83,14 +82,34 @@ class ChatRepository:
             ("response_status", "TEXT"),
             ("feedback", "INTEGER"),
         ]
+
+        existing_columns = self._get_existing_columns(cur, "chat_history")
+
         for col_name, col_type in columns:
-            try:
+            if col_name not in existing_columns:
                 cur.execute(
                     f"ALTER TABLE chat_history ADD COLUMN {col_name} {col_type}"
                 )
-            except sqlite3.OperationalError:
-                # Column likely already exists if migration ran partially or manually
-                pass
+
+    def _extract_metric_values(self, metrics: ChatMetrics | None) -> tuple:
+        """Extract metric values as tuple for SQL insert."""
+        if not metrics:
+            return (0, 0, 0.0, 0.0, 0.0, None, None, None)
+
+        rag_success_int = (
+            1 if metrics.rag_success else 0 if metrics.rag_success is not None else None
+        )
+
+        return (
+            metrics.input_tokens,
+            metrics.output_tokens,
+            metrics.cost,
+            metrics.total_latency,
+            metrics.ttft,
+            metrics.avg_retrieval_distance,
+            rag_success_int,
+            metrics.response_status,
+        )
 
     def add_message(
         self,
@@ -99,24 +118,10 @@ class ChatRepository:
         metadata: Metadata | None = None,
         metrics: ChatMetrics | None = None,
     ) -> int:
-        """
-        Persist a message to the database with optional metrics.
-        """
+        """Add message with optional metrics to chat history."""
         timestamp = datetime.now(timezone.utc).isoformat()
         metadata_json = json.dumps(metadata) if metadata else None
-
-        # Extract metrics if provided
-        input_tokens = metrics.input_tokens if metrics else 0
-        output_tokens = metrics.output_tokens if metrics else 0
-        cost = metrics.cost if metrics else 0.0
-        total_latency = metrics.total_latency if metrics else 0.0
-        ttft = metrics.ttft if metrics else 0.0
-        avg_retrieval_distance = metrics.avg_retrieval_distance if metrics else None
-        rag_success = metrics.rag_success if metrics else None
-        response_status = metrics.response_status if metrics else None
-
-        # Convert bool to int for SQLite
-        rag_success_int = 1 if rag_success else 0 if rag_success is not None else None
+        metric_values = self._extract_metric_values(metrics)
 
         with self._get_connection() as conn:
             cur = conn.cursor()
@@ -128,36 +133,19 @@ class ChatRepository:
                     avg_retrieval_distance, rag_success, response_status
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
-                (
-                    role,
-                    content,
-                    timestamp,
-                    metadata_json,
-                    input_tokens,
-                    output_tokens,
-                    cost,
-                    total_latency,
-                    ttft,
-                    avg_retrieval_distance,
-                    rag_success_int,
-                    response_status,
-                ),
+                (role, content, timestamp, metadata_json, *metric_values),
             )
             conn.commit()
             assert cur.lastrowid is not None
             return cur.lastrowid
 
-    def get_recent_messages(self, limit: int = 10) -> list[dict[str, str]]:
-        """
-        Retrieve the most recent messages for LLM context.
-        Returns them in chronological order (oldest first).
-        """
+    def get_recent_messages(self, limit: int = 10) -> list[ChatMessage]:
+        """Retrieve last N messages in chronological order (oldest first)."""
         with self._get_connection() as conn:
             cur = conn.cursor()
-            # Fetch most recent messages (DESC)
             cur.execute(
                 """
-                SELECT role, content
+                SELECT role, content, timestamp
                 FROM chat_history
                 ORDER BY timestamp DESC
                 LIMIT ?
@@ -166,27 +154,25 @@ class ChatRepository:
             )
             rows = cur.fetchall()
 
-            # Reverse to get chronological order
-            results = [{"role": row["role"], "content": row["content"]} for row in rows]
+            results = [
+                ChatMessage(
+                    role=row["role"], content=row["content"], timestamp=row["timestamp"]
+                )
+                for row in rows
+            ]
             return list(reversed(results))
 
-    def update_feedback(self, message_id: int, feedback: int) -> None:
-        """
-        Update feedback for a specific message.
-        feedback: 1 (up), -1 (down), 0 (neutral/removed)
-        """
+    def update_feedback(self, message_id: int, feedback: Feedback) -> None:
         with self._get_connection() as conn:
             cur = conn.cursor()
             cur.execute(
                 "UPDATE chat_history SET feedback = ? WHERE id = ?",
-                (feedback, message_id),
+                (int(feedback), message_id),
             )
             conn.commit()
 
-    def get_assistant_metrics(self, limit: int = 100) -> list[dict]:
-        """Get assistant message metrics for dashboard."""
+    def get_assistant_metrics(self, limit: int = 100) -> list[ChatLogEntry]:
         with self._get_connection() as conn:
-            # Ensure row_factory is set for this connection if created fresh
             conn.row_factory = sqlite3.Row
             cur = conn.cursor()
             cur.execute(
@@ -200,10 +186,31 @@ class ChatRepository:
             """,
                 (limit,),
             )
-            return [dict(row) for row in cur.fetchall()]
+
+            results = []
+            for row in cur.fetchall():
+                metrics = ChatMetrics(
+                    ttft=row["ttft"],
+                    total_latency=row["total_latency"],
+                    input_tokens=row["input_tokens"],
+                    output_tokens=row["output_tokens"],
+                    cost=row["cost"],
+                    avg_retrieval_distance=row["avg_retrieval_distance"],
+                    rag_success=bool(row["rag_success"])
+                    if row["rag_success"] is not None
+                    else False,
+                    response_status=row["response_status"] or "success",
+                )
+                results.append(
+                    ChatLogEntry(
+                        timestamp=row["timestamp"],
+                        metrics=metrics,
+                        feedback=row["feedback"],
+                    )
+                )
+            return results
 
     def get_success_breakdown(self) -> dict[str, int]:
-        """Get success/partial/error counts for pie chart."""
         with self._get_connection() as conn:
             cur = conn.cursor()
             cur.execute("""
@@ -215,7 +222,6 @@ class ChatRepository:
                 WHERE role = 'assistant'
             """)
             row = cur.fetchone()
-            # Handle case where table is empty (returns None)
             if not row:
                 return {"full_success": 0, "partial": 0, "error": 0}
             return {

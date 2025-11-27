@@ -1,6 +1,6 @@
 import pytest
 from app.core.config import Settings
-from app.db.memory import ChatRepository
+from app.db.chat_repository import ChatRepository
 from app.agents.planning import PlanningService
 
 
