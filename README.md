@@ -126,7 +126,16 @@ Open your browser to `http://localhost:8501`.
 
 You can spin up all services using Docker Compose.
 
-### 1. Run the Web Dashboard
+### 1. Setup Permissions (Linux/Mac)
+
+Since the application runs as a non-root user inside the container, you must ensure the local data directories are writable.
+
+```bash
+mkdir -p data .cache
+chmod -R 777 data .cache
+```
+
+### 2. Run the Web Dashboard
 
 This starts the Streamlit dashboard and the ChromaDB server.
 
@@ -136,13 +145,14 @@ docker-compose up -d ai-web
 
 Access at: `http://localhost:8501`
 
-### 2. Run the CLI
+### 3. Run the CLI
 
 To run the interactive CLI within a container:
 
 ```bash
 docker-compose --profile cli run --rm ai-cli
 ```
+This command will also start the `ai-web` dashboard service automatically. You can then access the dashboard at `http://localhost:8501` (if the web dashboard is not already running).
 
 ## 🧪 Testing
 
