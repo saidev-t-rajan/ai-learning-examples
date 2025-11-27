@@ -35,6 +35,8 @@ build/
 
 *.md
 !docs/**/*.md
+!README.md
+!report.md
 
 streamlit_err.log
 streamlit_out.log
