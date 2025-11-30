@@ -33,10 +33,10 @@ build/
 /data/
 .cache
 
-*.md
 !docs/**/*.md
 !README.md
 !report.md
+!next_steps.md
 
 streamlit_err.log
 streamlit_out.log
