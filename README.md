@@ -159,6 +159,24 @@ This command will also start the `ai-web` dashboard service automatically. You c
 
 The project uses `pytest`.
 
+#### Test Environment Configuration
+
+The test suite is configured to look for a `.env.test` file.
+
+1. Create a `.env.test` file in the project root (or copy your existing `.env`):
+
+   ```bash
+   cp .env .env.test
+   ```
+
+2. Ensure it contains your OpenAI credentials:
+
+```env
+OPENAI_API_KEY=sk-your-key-here
+OPENAI_BASE_URL=https://api.openai.com/v1
+MODEL_NAME=gpt-4o
+```
+
 **Note**: Before running tests locally, ensure that the Chroma DB service is running:
 
 ```bash
