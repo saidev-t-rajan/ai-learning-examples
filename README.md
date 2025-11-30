@@ -6,20 +6,20 @@ A Python-based CLI application and Web Dashboard demonstrating interaction with 
 
 The application consists of several core components designed to demonstrate modern AI patterns:
 
-* **Interactive CLI**: The primary entry point for chatting with the AI, executing plans, and healing code.
-* **Autonomous Agents**:
-  * **Planner**: A ReAct-style agent that breaks down travel requests into steps, utilizing tools to fetch flight prices and weather data.
-  * **Healer**: A self-correcting agent that generates code, executes it in a local sandbox, captures errors, and iteratively fixes them.
-* **RAG Pipeline**: Retrieval-Augmented Generation using **ChromaDB** for vector storage and **Sentence Transformers** for local embeddings. It ingests PDF/Text documents to ground LLM responses.
-* **Observability Dashboard**: A Streamlit web application (`app/web/`) that visualizes usage metrics (tokens, cost, latency) and retrieval quality stored in a SQLite database.
-* **Persistence**: All chat history and metrics are persisted in `data/chat.db` (SQLite) and `data/chroma_db/` (Vector Store).
+- **Interactive CLI**: The primary entry point for chatting with the AI, executing plans, and healing code.
+- **Autonomous Agents**:
+  - **Planner**: A ReAct-style agent that breaks down travel requests into steps, utilizing tools to fetch flight prices and weather data.
+  - **Healer**: A self-correcting agent that generates code, executes it in a local sandbox, captures errors, and iteratively fixes them.
+- **RAG Pipeline**: Retrieval-Augmented Generation using **ChromaDB** for vector storage and **Sentence Transformers** for local embeddings. It ingests PDF/Text documents to ground LLM responses.
+- **Observability Dashboard**: A Streamlit web application (`app/web/`) that visualizes usage metrics (tokens, cost, latency) and retrieval quality stored in a SQLite database.
+- **Persistence**: All chat history and metrics are persisted in `data/chat.db` (SQLite) and `data/chroma_db/` (Vector Store).
 
 ## 🛠️ Setup
 
 ### Prerequisites
 
-* **Python 3.13+**
-* **Docker** & **Docker Compose** (Optional, for containerized execution)
+- **Python 3.13+**
+- **Docker** & **Docker Compose** (Optional, for containerized execution)
 
 ### Environment Configuration
 
@@ -38,17 +38,17 @@ MODEL_NAME=gpt-4o
 
 1. **Create a virtual environment:**
 
-    ```bash
-    python3 -m venv .venv
-    source .venv/bin/activate  # Windows: .venv\Scripts\activate
-    ```
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate  # Windows: .venv\Scripts\activate
+   ```
 
 2. **Install dependencies:**
 
-    ```bash
-    pip install -r requirements.txt
-    pip install -r requirements-dev.txt
-    ```
+   ```bash
+   pip install -r requirements.txt
+   pip install -r requirements-dev.txt
+   ```
 
 ## 💻 Usage
 
@@ -58,41 +58,39 @@ The application supports two datasets for RAG: a default **Standard Corpus** (`d
 
 1. **Download Large Corpus**:
 
-    To download the extended dataset (>50MB of public domain books):
+   To download the extended dataset (>50MB of public domain books):
 
-    ```bash
+   ```bash
 
-    python scripts/download_corpus.py
+   python scripts/download_corpus.py
 
-    ```
+   ```
 
 2. **Ingest Documents**:
 
-    You can ingest documents using the helper script or the interactive CLI.
+   You can ingest documents using the helper script or the interactive CLI.
+   - **Via Script**:
 
-    * **Via Script**:
+     ```bash
 
-        ```bash
+     # Ingest Standard Corpus
 
-        # Ingest Standard Corpus
-
-        python scripts/ingest_corpus.py
-
+     python scripts/ingest_corpus.py
 
 
-        # Ingest Large Corpus (>50MB)
 
-        python scripts/ingest_corpus.py --large
+     # Ingest Large Corpus (>50MB)
 
-        ```
+     python scripts/ingest_corpus.py --large
 
-    * **Via CLI**:
+     ```
 
-        Inside the application (`python -m app.main`):
+   - **Via CLI**:
 
-        * `/ingest_all` - Ingests the standard corpus.
+     Inside the application (`python -m app.main`):
+     - `/ingest_all` - Ingests the standard corpus.
 
-        * `/ingest_all --large` - Ingests the large corpus (>50MB).
+     - `/ingest_all --large` - Ingests the large corpus (>50MB).
 
 ### Running the CLI
 
@@ -106,18 +104,18 @@ python -m app.main
 
 **Commands:**
 
-* `/plan <request>` - Ask the Planning Agent to organize a trip (e.g., "Plan a 3-day trip to Tokyo").
-* `/heal <task>` - Ask the Healer Agent to write/fix code (e.g., "Write a script to calculate primes").
-* `/ingest <path>` - Load a document into the RAG system.
-* `/ingest_all` - Load all documents from `data/corpus`.
-* `/exit` - Quit the application.
+- `/plan <request>` - Ask the Planning Agent to organize a trip (e.g., "Plan a 3-day trip to Tokyo").
+- `/heal <task>` - Ask the Healer Agent to write/fix code (e.g., "Write a script to calculate primes").
+- `/ingest <path>` - Load a document into the RAG system.
+- `/ingest_all` - Load all documents from `data/corpus`.
+- `/exit` - Quit the application.
 
 ### Running the Dashboard
 
 Launch the Streamlit observability dashboard:
 
 ```bash
-streamlit run app/web/main.py
+ python -m streamlit run app/web/main.py
 ```
 
 Open your browser to `http://localhost:8501`.
@@ -152,6 +150,7 @@ To run the interactive CLI within a container:
 ```bash
 docker-compose --profile cli run --rm ai-cli
 ```
+
 This command will also start the `ai-web` dashboard service automatically. You can then access the dashboard at `http://localhost:8501` (if the web dashboard is not already running).
 
 ## 🧪 Testing
@@ -168,23 +167,23 @@ docker-compose up -d chromadb
 
 ```
 
-* **Run all tests** (Requires API Key):
+- **Run all tests** (Requires API Key):
 
-    ```bash
-    python -m pytest
-    ```
+  ```bash
+  python -m pytest
+  ```
 
-* **Run unit tests only** (No API cost):
+- **Run unit tests only** (No API cost):
 
-    ```bash
-    python -m pytest -m "not integration"
-    ```
+  ```bash
+  python -m pytest -m "not integration"
+  ```
 
-* **Run integration tests only**:
+- **Run integration tests only**:
 
-    ```bash
-    python -m pytest -m integration
-    ```
+  ```bash
+  python -m pytest -m integration
+  ```
 
 ### Running Tests in Docker
 
@@ -196,6 +195,6 @@ docker-compose --profile test run --rm ai-cli-test
 
 ## 📂 Development
 
-* **Linting**: Run `ruff check .` to ensure code quality.
-* **Type Checking**: This project uses type hints extensively. Run `mypy .` to check
-* **Logs**: Application logs are stored in `data/app.log`.
+- **Linting**: Run `ruff check .` to ensure code quality.
+- **Type Checking**: This project uses type hints extensively. Run `mypy .` to check
+- **Logs**: Application logs are stored in `data/app.log`.
